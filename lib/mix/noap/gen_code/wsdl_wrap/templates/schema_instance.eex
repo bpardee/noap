@@ -1,0 +1,30 @@
+@schema_<%= schema_wrap.target_ns %> %Noap.Schema{
+  #dir: "lib/my_chex_advisor/response/idc_c019/id_c52700",
+  #element_form_default: "qualified",
+  #module: "MyChexAdvisor.Response.IDCC019.IDC52700",
+  wsdl: @wsdl,
+  schema_ns: "<%= schema_wrap.schema_ns %>",
+  target_namespace: "<%= schema_wrap.target_namespace %>",
+  target_ns: "<%= schema_wrap.target_ns %>",
+  #top_types: %{"IDC52700OperationResponse" => "tns:ProgramInterface"},
+  #types: [
+  #  %Mix.Noap.GenCode.WSDLWrap.ComplexType{
+  #    fields: [
+  #      %Mix.Noap.GenCode.WSDLWrap.Field{
+  #        field_or_embed: "embeds_one",
+  #        name: "ChexSysOrigRspV3",
+  #        type: "MyChexAdvisor.Response.IDCC019.IDC52700.ChexSysOrigRspV3",
+  #        underscored_name: "chex_sys_orig_rsp_v3"
+  #      }
+  #    ],
+  #    name: "ProgramInterface",
+  #    parent_dir: "lib/my_chex_advisor/response/idc_c019/id_c52700",
+  #    parent_module: "MyChexAdvisor.Response.IDCC019.IDC52700"
+  #  }
+  #]
+  action_tag_attributes: <%= 
+    if schema_wrap.element_form_default == "qualified",
+      do: "%{xmlns: \"#{schema_wrap.target_namespace}\"}",
+      else: "%{}"
+  %>
+}

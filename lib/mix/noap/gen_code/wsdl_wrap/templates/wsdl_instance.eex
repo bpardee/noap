@@ -1,0 +1,8 @@
+@wsdl %Noap.WSDL{
+  endpoint: "<%= wsdl_wrap.endpoint %>"
+}
+#    message_map: %{
+#      "CACustomerSoapIn" => %{name: "CACustomer", ns: :tns},
+#      "CACustomerSoapOut" => %{name: "CACustomerResponse", ns: :tns}
+#    }
+#    operation_map: %{"CACustomer" => %{input: "CACustomerSoapIn", output: "CACustomerSoapOut"}}

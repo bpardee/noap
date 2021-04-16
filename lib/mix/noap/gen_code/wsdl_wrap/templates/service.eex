@@ -1,0 +1,10 @@
+defmodule <%= wrap.module_prefix %>.Service do
+
+  <%= wsdl_instance %>
+
+  <%= schema_instances %>
+
+  <%= operation_instances %>
+
+  <%= operation_functions %>
+end
