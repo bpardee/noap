@@ -1,11 +1,11 @@
 @<%= wrap.underscored_name %>_operation %Noap.Operation{
+  name: "<%= wrap.name %>",
+  input_name: "<%= wrap.input_name %>",
   input_schema: @schema_<%= wrap.input_schema.target_ns %>,
   input_module: <%= wrap.input_complex_type.module %>,
+  output_name: "<%= wrap.output_name %>",
   output_schema: @schema_<%= wrap.output_schema.target_ns %>,
   output_module: <%= wrap.output_complex_type.module %>,
-  action_attribute: <%= inspect(wrap.action_attribute) %>
-  #soap_action: <%= wrap.soap_action %>,
-  #action_tag: nil <%= #wrap.action_tag %>,
-  #action_ns: nil <%= #wrap.action_ns %>,
-  #action_tag_attributes: <%= #wrap.action_tag_attributes %>
+  action_attribute: <%= inspect(wrap.action_attribute) %>,
+  action_tag: <%= inspect(wrap.action_tag) %>
 }

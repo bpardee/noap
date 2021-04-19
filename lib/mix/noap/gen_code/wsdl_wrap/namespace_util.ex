@@ -1,14 +1,5 @@
 defmodule Mix.Noap.GenCode.WSDLWrap.NamespaceUtil do
-  import SweetXml, only: [add_namespace: 3, xpath: 2, sigil_x: 2, parse: 2]
-  import Mix.Noap.GenCode.WSDLWrap.Util, only: [charlist_to_string: 1]
-
-  def find_namespace(doc, url) do
-    doc
-    |> xpath(~x"//namespace::*"l)
-    |> Enum.find(fn {_, _, _, _, x} -> url == to_string(x) end)
-    |> elem(3)
-    |> charlist_to_string()
-  end
+  import SweetXml, only: [add_namespace: 3]
 
   def add_schema_namespace(xpath, prefix) do
     add_namespace(xpath, prefix, "http://www.w3.org/2001/XMLSchema")
@@ -22,7 +13,7 @@ defmodule Mix.Noap.GenCode.WSDLWrap.NamespaceUtil do
   # defp get_soap_namespace(doc, opts) when is_list(opts) do
   #   version = soap_version(opts)
   #   url = @soap_version_namespaces[version]
-  #   find_namespace(doc, url)
+  #   Noap.XML.find_namespace(doc, url)
   # end
 
   def add_soap_namespace(xpath, prefix) do

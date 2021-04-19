@@ -17,7 +17,6 @@ defmodule Mix.Noap.GenCode.WSDLWrap do
 
   import __MODULE__.NamespaceUtil,
     only: [
-      find_namespace: 2,
       add_schema_namespace: 2,
       add_protocol_namespace: 2,
       add_soap_namespace: 2
@@ -34,13 +33,11 @@ defmodule Mix.Noap.GenCode.WSDLWrap do
     module_dir = Util.get_module_dir(module_prefix)
     str = File.read!(wsdl_path)
     doc = parse(str, namespace_conformant: true)
-    # protocol_namespace = find_namespace(doc, "http://schemas.xmlsoap.org/wsdl/")
-    # soap_namespace = get_soap_namespace(doc, opts)
-    schema_ns = find_namespace(doc, "http://www.w3.org/2001/XMLSchema")
+    schema_ns = Noap.XML.find_namespace(doc, "http://www.w3.org/2001/XMLSchema")
     endpoint = get_endpoint(doc)
     namespace_map = get_namespace_map(doc)
     schema_map = get_schema_map(doc, schema_ns, module_prefix, module_dir, namespace_map, options)
-    message_map = get_message_map(doc)
+    message_map = get_message_map(doc) |> IO.inspect(label: :message_map)
     operations = get_operations(doc, schema_map, message_map, options)
 
     wsdl_wrap = %__MODULE__{
@@ -49,9 +46,6 @@ defmodule Mix.Noap.GenCode.WSDLWrap do
       namespace_map: namespace_map,
       schema_map: schema_map,
       operations: operations,
-      # schema_attributes: get_schema_attributes(doc),
-      # validation_types: get_validation_types(doc, wsdl_path, protocol_namespace, schema_ns, endpoint),
-      # soap_version: soap_version(opts)
       message_map: message_map
     }
 
@@ -128,28 +122,9 @@ defmodule Mix.Noap.GenCode.WSDLWrap do
   defp build_schema_instance({ns, schema}) do
     {ns,
      %Noap.Schema{
-       # dir: "lib/my_chex_advisor/response/idc_c019/id_c52700",
-       # element_form_default: "qualified",
-       # module: "MyChexAdvisor.Response.IDCC019.IDC52700",
        schema_ns: schema.schema_ns,
        target_namespace: schema.target_namespace,
        target_ns: schema.target_ns,
-       # top_types: %{"IDC52700OperationResponse" => "tns:ProgramInterface"},
-       # types: [
-       #  %Mix.Noap.GenCode.WSDLWrap.ComplexType{
-       #    fields: [
-       #      %Mix.Noap.GenCode.WSDLWrap.Field{
-       #        field_or_embed: "embeds_one",
-       #        name: "ChexSysOrigRspV3",
-       #        type: "MyChexAdvisor.Response.IDCC019.IDC52700.ChexSysOrigRspV3",
-       #        underscored_name: "chex_sys_orig_rsp_v3"
-       #      }
-       #    ],
-       #    name: "ProgramInterface",
-       #    parent_dir: "lib/my_chex_advisor/response/idc_c019/id_c52700",
-       #    parent_module: "MyChexAdvisor.Response.IDCC019.IDC52700"
-       #  }
-       # ]
        action_tag_attributes: action_tag_attributes(schema)
      }}
   end
@@ -211,6 +186,8 @@ defmodule Mix.Noap.GenCode.WSDLWrap do
     name = xpath(op_node, ~x"./@name"s)
     input_message_name = get_operation_arg_name(op_node, ~x"./wsdl:input/@message"s)
     output_message_name = get_operation_arg_name(op_node, ~x"./wsdl:output/@message"s)
+    input_name = message_map[input_message_name][:name]
+    output_name = message_map[output_message_name][:name]
     input_header = get_operation_input_header(op_node)
 
     {input_schema, input_complex_type} =
@@ -230,15 +207,19 @@ defmodule Mix.Noap.GenCode.WSDLWrap do
     %OperationWrap{
       name: name,
       underscored_name: Util.underscore(name),
+      input_name: input_name,
       input_schema: input_schema,
       input_complex_type: input_complex_type,
+      output_name: output_name,
       output_schema: output_schema,
       output_complex_type: output_complex_type,
       soap_action: nil,
       input_header_message: input_header[:message],
       input_header_part: input_header[:part],
-      action_attribute: action.attribute
+      action_attribute: action.attribute,
+      action_tag: action.tag
     }
+    |> IO.inspect()
   end
 
   defp get_operation_arg_name(op_node, path) do

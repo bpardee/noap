@@ -1,28 +1,13 @@
 defmodule <%= complex_type.module %> do
   use Ecto.Schema
-  # import Ecto.Changeset
 
-  # @xml_root "<%= complex_type.name %>"
-
-  @xml_field_map [
-    <%= 
-      complex_type.fields
-      |> Stream.map(fn field ->
-        "#{field.underscored_name}: \"#{field.name}\""
-      end)
-      |> Enum.join(",\n    ")
-    %>
+  @xml_fields [
+    <%= xml_fields(complex_type) %>
   ]
 
   use Noap.Model
 
   embedded_schema do
-    <%= 
-      complex_type.fields
-      |> Stream.map(fn field ->
-        "#{field.field_or_embed}(:#{field.underscored_name}, #{field.type})"
-      end)
-      |> Enum.join("\n    ")
-    %>
+    <%= schema_fields(complex_type) %>
   end
 end

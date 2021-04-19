@@ -47,4 +47,25 @@ defmodule Mix.Noap.GenCode.WSDLWrap.Template do
     IO.puts("Creating #{file_name}")
     File.write!(file_name, Code.format_string!(code), [:write])
   end
+
+  defp xml_fields(complex_type) do
+    complex_type.fields
+    |> Stream.map(fn field ->
+      "{:#{field.underscored_name}, \"#{field.name}\", :#{field.simple_or_one_or_many}}"
+    end)
+    |> Enum.join(",\n")
+  end
+
+  defp schema_fields(complex_type) do
+    complex_type.fields
+    |> Stream.map(fn field ->
+      spec = field_or_embeds_one_or_embeds_many(field.simple_or_one_or_many)
+      "#{spec}(:#{field.underscored_name}, #{field.type})"
+    end)
+    |> Enum.join("\n")
+  end
+
+  defp field_or_embeds_one_or_embeds_many(:simple), do: "field"
+  defp field_or_embeds_one_or_embeds_many(:one), do: "embeds_one"
+  defp field_or_embeds_one_or_embeds_many(:many), do: "embeds_many"
 end

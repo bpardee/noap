@@ -1,4 +1,4 @@
-defmodule Noap.Request.Body do
+defmodule Noap.Model.Request do
   @moduledoc false
 
   @schema_types %{
@@ -10,18 +10,16 @@ defmodule Noap.Request.Body do
     "1.2" => "http://www.w3.org/2003/05/soap-envelope"
   }
 
-  alias Noap.Schema
-
   @doc """
   Parsing parameters map and generate body xml by given soap action name and body params(Map).
   Returns xml-like string.
   """
-  @spec build_body(
-          operation :: Noap.Operation.t(),
+  @spec build_request_xml(
           model :: map(),
+          operation :: Noap.Operation.t(),
           headers :: map()
         ) :: String.t() | no_return()
-  def build_body(operation, model, headers) do
+  def build_request_xml(model, operation, headers) do
     body = build_soap_body(operation, model)
     header = build_soap_header(operation, headers)
 
@@ -34,15 +32,15 @@ defmodule Noap.Request.Body do
 
   def build_soap_body(operation, model) do
     model
-    |> Noap.Model.to_element_tuples()
+    |> Noap.Model.to_element_tuples("m")
     |> add_action_tag_wrapper(operation)
-    |> add_body_tag_wrapper
+    |> add_body_tag_wrapper(operation.input_schema.wsdl)
   end
 
   def build_soap_header(operation, headers) do
     map_to_tuple_element_list(headers)
     |> add_header_part_tag_wrapper(operation)
-    |> add_header_tag_wrapper
+    |> add_header_tag_wrapper(operation.input_schema.wsdl)
   end
 
   defp map_to_tuple_element_list(map) do
@@ -52,25 +50,19 @@ defmodule Noap.Request.Body do
 
   @spec add_action_tag_wrapper(list(), Noap.Operation.t()) :: list()
   def add_action_tag_wrapper(body, operation) do
-    action_tag_attributes = operation.input_schema.action_tag_attributes
-    # "CACustomer"
-    # "tns:ProgramInterface"
-    action_tag = operation.action_tag
-    [XmlBuilder.element(action_tag, action_tag_attributes, body)]
+    op_tag = "#{operation.body_namespace}:#{operation.input_name}"
+
+    op_tag_attributes = %{
+      "xmlns:#{operation.body_namespace}" => operation.input_schema.target_namespace
+    }
+
+    [XmlBuilder.element(op_tag, op_tag_attributes, body)]
   end
 
   @spec add_header_part_tag_wrapper(map(), String.t()) :: list()
-  def add_header_part_tag_wrapper(body, operation) do
-    action_tag_attributes = operation.action_tag_attributes
-    action_tag = operation.action_tag
-
-    case get_header_with_namespace(operation) do
-      nil ->
-        nil
-
-      action_tag ->
-        [XmlBuilder.element(action_tag, action_tag_attributes, body)]
-    end
+  def add_header_part_tag_wrapper(_body, _operation) do
+    # TBD
+    nil
   end
 
   @spec get_header_with_namespace(operation :: String.t()) :: String.t()
@@ -84,7 +76,7 @@ defmodule Noap.Request.Body do
     # end
     nil
 
-    # iex(10)> action_attribute_namespace = Soap.Request.Params.get_action_with_namespace(model2, "IDC52700Operation")
+    # iex(10)> action_attribute_namespace = Soap.Request.Params.[get_action_with]_namespace(model2, "IDC52700Operation")
     # "tns:ProgramInterface"
   end
 
@@ -95,34 +87,35 @@ defmodule Noap.Request.Body do
   #   |> Enum.find(&(&1[:name] == part))
   # end
 
-  @spec add_body_tag_wrapper(list()) :: list()
-  def add_body_tag_wrapper(body), do: [XmlBuilder.element(:"#{env_namespace()}:Body", nil, body)]
+  @spec add_header_tag_wrapper(list(), Noap.WSDL.t()) :: list()
+  def add_header_tag_wrapper(body, wsdl),
+    do: [XmlBuilder.element("#{wsdl.soap_namespace}:Header", nil, body)]
 
-  @spec add_header_tag_wrapper(list()) :: list()
-  def add_header_tag_wrapper(body),
-    do: [XmlBuilder.element(:"#{env_namespace()}:Header", nil, body)]
+  @spec add_body_tag_wrapper(list(), Noap.WSDL.t()) :: list()
+  def add_body_tag_wrapper(body, wsdl),
+    do: [XmlBuilder.element("#{wsdl.soap_namespace}:Body", nil, body)]
 
   @spec add_envelope_tag_wrapper(body :: any(), operation :: String.t()) :: any()
   def add_envelope_tag_wrapper(body, operation) do
+    wsdl = operation.input_schema.wsdl
+
     envelop_attributes =
       @schema_types
-      |> Map.merge(build_soap_version_attribute(operation.input_schema.wsdl))
+      |> Map.merge(build_soap_version_attribute(wsdl))
       |> Map.merge(operation.action_attribute)
       |> Map.merge(custom_namespaces())
 
-    [XmlBuilder.element(:"#{env_namespace()}:Envelope", envelop_attributes, body)]
+    [XmlBuilder.element(:"#{wsdl.soap_namespace}:Envelope", envelop_attributes, body)]
   end
 
   @spec build_soap_version_attribute(Map.t()) :: map()
   def build_soap_version_attribute(wsdl) do
-    soap_version = wsdl |> soap_version() |> to_string
-    %{"xmlns:#{env_namespace()}" => @soap_version_namespaces[soap_version]}
+    %{"xmlns:#{wsdl.soap_namespace}" => @soap_version_namespaces[wsdl.soap_version]}
   end
 
   def soap_version(wsdl) do
-    Map.get(wsdl, :soap_version, Application.fetch_env!(:soap, :globals)[:version])
+    Map.get(wsdl, :soap_version, Application.get_env(:noap, :soap_version, "1.1"))
   end
 
-  def env_namespace, do: Application.fetch_env!(:soap, :globals)[:env_namespace] || :env
-  def custom_namespaces, do: Application.fetch_env!(:soap, :globals)[:custom_namespaces] || %{}
+  def custom_namespaces, do: Application.get_env(:noap, :custom_namespaces, %{})
 end

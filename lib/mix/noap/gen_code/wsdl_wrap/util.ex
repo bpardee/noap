@@ -25,12 +25,21 @@ defmodule Mix.Noap.GenCode.WSDLWrap.Util do
     |> Enum.join()
   end
 
+  @spec underscore(String.t()) :: String.t()
+  @doc """
+  Convert from title-case to underscore.
+  """
   def underscore(str) do
-    if Regex.match?(~r/^[A-Z]+[0-9]+$/, str) do
-      String.downcase(str)
-    else
-      Macro.underscore(str)
-    end
+    # Generally just do Macro.underscore but avoid funky underscoring for things like IDC3456
+    String.split(str, ~r/[A-Z]+[0-9]+/, include_captures: true, trim: true)
+    |> Enum.map(fn part ->
+      if Regex.match?(~r/^[A-Z]+[0-9]+$/, part) do
+        String.downcase(part)
+      else
+        Macro.underscore(part)
+      end
+    end)
+    |> Enum.join("_")
   end
 
   def convert_url_to_module(url, parent_module, module_dir) do

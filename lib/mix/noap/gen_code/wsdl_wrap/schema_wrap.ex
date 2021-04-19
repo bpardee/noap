@@ -31,7 +31,7 @@ defmodule Mix.Noap.GenCode.WSDLWrap.SchemaWrap do
   alias Mix.Noap.GenCode.WSDLWrap.{Action, ComplexType, Field, Options, Util}
   import SweetXml, only: [xpath: 2, xpath: 3, sigil_x: 2]
 
-  import WSDLWrap.NamespaceUtil, only: [find_namespace: 2, add_schema_namespace: 2]
+  import WSDLWrap.NamespaceUtil, only: [add_schema_namespace: 2]
 
   def new(schema_ns, parent_module, parent_dir, schema_element, namespace_map, options) do
     %{
@@ -47,7 +47,7 @@ defmodule Mix.Noap.GenCode.WSDLWrap.SchemaWrap do
       raise "Not sure how to handle with no targetNamespace: #{inspect(schema_element)}"
     end
 
-    target_ns = find_namespace(schema_element, target_namespace) |> String.to_atom()
+    target_ns = Noap.XML.find_namespace(schema_element, target_namespace) |> String.to_atom()
 
     {module, dir} =
       case Options.schema_module(options, target_ns) do
@@ -138,8 +138,21 @@ defmodule Mix.Noap.GenCode.WSDLWrap.SchemaWrap do
     end
 
     case type do
-      "" -> Field.new(name, parse_type(schema, element, parent_complex_type))
-      type -> get_simple_field(schema, name, type)
+      "" ->
+        complex_type = parse_type(schema, element, parent_complex_type)
+        max_occurs = element |> xpath(~x"@maxOccurs"s)
+
+        simple_or_one_or_many =
+          cond do
+            is_atom(complex_type) -> :simple
+            max_occurs == "" || String.to_integer(max_occurs) <= 1 -> :one
+            true -> :many
+          end
+
+        Field.new(name, complex_type, simple_or_one_or_many)
+
+      type ->
+        get_simple_field(schema, name, type)
     end
   end
 
