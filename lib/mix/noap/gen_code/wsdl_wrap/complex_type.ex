@@ -32,14 +32,4 @@ defmodule Mix.Noap.GenCode.WSDLWrap.ComplexType do
   def add_field(complex_type = %__MODULE__{}, field = %Field{}) do
     %{complex_type | fields: [field | complex_type.fields]}
   end
-
-  def create_code(complex_type = %__MODULE__{parent_dir: parent_dir, name: name}) do
-    # The fields are in reverse order based on add_field so reverse them
-    complex_type = %{complex_type | fields: Enum.reverse(complex_type.fields)}
-
-    Template.create_model(complex_type)
-    |> Template.save!(parent_dir, name)
-
-    complex_type
-  end
 end

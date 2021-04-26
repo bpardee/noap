@@ -1,4 +1,4 @@
-@<%= wrap.underscored_name %>_operation %Noap.Operation{
+@<%= wrap.underscored_name %>_operation %Noap.WSDL.Operation{
   name: "<%= wrap.name %>",
   input_name: "<%= wrap.input_name %>",
   input_schema: @schema_<%= wrap.input_schema.target_ns %>,

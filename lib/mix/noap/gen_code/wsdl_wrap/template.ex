@@ -1,7 +1,7 @@
 defmodule Mix.Noap.GenCode.WSDLWrap.Template do
   require EEx
 
-  alias Mix.Noap.GenCode.WSDLWrap.Util
+  alias Mix.Noap.GenCode.WSDLWrap.{ComplexType, Field, Util}
 
   defmodule EExPath do
     def get(name) do
@@ -33,7 +33,7 @@ defmodule Mix.Noap.GenCode.WSDLWrap.Template do
     :schema_wrap
   ])
 
-  EEx.function_from_file(:def, :create_model, EExPath.get("model"), [
+  EEx.function_from_file(:def, :create_complex_type, EExPath.get("complex_type"), [
     :complex_type
   ])
 
@@ -51,21 +51,13 @@ defmodule Mix.Noap.GenCode.WSDLWrap.Template do
   defp xml_fields(complex_type) do
     complex_type.fields
     |> Stream.map(fn field ->
-      "{:#{field.underscored_name}, \"#{field.name}\", :#{field.simple_or_one_or_many}}"
-    end)
-    |> Enum.join(",\n")
-  end
-
-  defp schema_fields(complex_type) do
-    complex_type.fields
-    |> Stream.map(fn field ->
-      spec = field_or_embeds_one_or_embeds_many(field.simple_or_one_or_many)
-      "#{spec}(:#{field.underscored_name}, #{field.type})"
+      {spec, tname} = spec_type_pair(field)
+      "#{spec}(:#{field.underscored_name}, \"#{field.name}\", #{tname})"
     end)
     |> Enum.join("\n")
   end
 
-  defp field_or_embeds_one_or_embeds_many(:simple), do: "field"
-  defp field_or_embeds_one_or_embeds_many(:one), do: "embeds_one"
-  defp field_or_embeds_one_or_embeds_many(:many), do: "embeds_many"
+  defp spec_type_pair(%Field{type: type}) when is_atom(type), do: {"field", ":#{type}"}
+  defp spec_type_pair(%Field{type: %ComplexType{module: m}, many?: false}), do: {"embeds_one", m}
+  defp spec_type_pair(%Field{type: %ComplexType{module: m}, many?: true}), do: {"embeds_many", m}
 end

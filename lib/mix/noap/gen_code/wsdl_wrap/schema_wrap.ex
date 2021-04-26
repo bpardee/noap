@@ -13,7 +13,7 @@ defmodule Mix.Noap.GenCode.WSDLWrap.SchemaWrap do
   @type_to_ecto_map %{
     "boolean" => :boolean,
     "date" => :date,
-    "dateTime" => :utc_datetime,
+    "dateTime" => :datetime,
     "double" => :float,
     "float" => :float,
     "int" => :integer,
@@ -126,7 +126,8 @@ defmodule Mix.Noap.GenCode.WSDLWrap.SchemaWrap do
         ComplexType.add_field(complex_type, field)
       end
     )
-    |> ComplexType.create_code()
+    # The fields are in reverse order based on add_field so put them back in correct order
+    |> (fn complex_type -> %{complex_type | fields: Enum.reverse(complex_type.fields)} end).()
   end
 
   defp parse_field(schema, element, parent_complex_type) do
@@ -139,17 +140,17 @@ defmodule Mix.Noap.GenCode.WSDLWrap.SchemaWrap do
 
     case type do
       "" ->
-        complex_type = parse_type(schema, element, parent_complex_type)
+        field_type = parse_type(schema, element, parent_complex_type)
         max_occurs = element |> xpath(~x"@maxOccurs"s)
 
-        simple_or_one_or_many =
+        many? =
           cond do
-            is_atom(complex_type) -> :simple
-            max_occurs == "" || String.to_integer(max_occurs) <= 1 -> :one
-            true -> :many
+            is_atom(field_type) -> false
+            max_occurs == "" || String.to_integer(max_occurs) <= 1 -> false
+            true -> true
           end
 
-        Field.new(name, complex_type, simple_or_one_or_many)
+        Field.new(name, field_type, many?)
 
       type ->
         get_simple_field(schema, name, type)
@@ -158,7 +159,7 @@ defmodule Mix.Noap.GenCode.WSDLWrap.SchemaWrap do
 
   defp get_simple_field(schema, name, type) do
     converted_type = convert_type(schema, type)
-    Field.new(name, converted_type)
+    Field.new(name, converted_type, _many? = false)
   end
 
   defp convert_type(schema, type) do

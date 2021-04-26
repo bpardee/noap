@@ -1,6 +1,5 @@
 defmodule Mix.Noap.GenCode.WSDLWrap.Util do
   @common_domains ~w[com org biz mil edu gov net int]
-
   def get_module_dir(module) do
     dir =
       [
@@ -64,6 +63,18 @@ defmodule Mix.Noap.GenCode.WSDLWrap.Util do
     File.mkdir_p!(dir)
 
     {"#{parent_module}.#{postfix}", dir}
+  end
+
+  def to_yaml(map, indentation \\ "") do
+    map
+    |> Enum.map(fn {key, value} ->
+      case value do
+        map when map == %{} -> "#{indentation}#{key}:"
+        map when is_map(map) -> "#{indentation}#{key}:\n#{to_yaml(map, "#{indentation}  ")}"
+        value -> "#{indentation}#{key}: #{value}"
+      end
+    end)
+    |> Enum.join("\n")
   end
 
   defp remove_common_host_front([prefix | rest]) when prefix in ~w[www], do: rest

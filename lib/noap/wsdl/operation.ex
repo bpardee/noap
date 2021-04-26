@@ -1,4 +1,4 @@
-defmodule Noap.Operation do
+defmodule Noap.WSDL.Operation do
   defstruct [
     :name,
     :input_name,

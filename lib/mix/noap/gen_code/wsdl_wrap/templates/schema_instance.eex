@@ -1,4 +1,4 @@
-@schema_<%= schema_wrap.target_ns %> %Noap.Schema{
+@schema_<%= schema_wrap.target_ns %> %Noap.WSDL.Schema{
   wsdl: @wsdl,
   schema_ns: "<%= schema_wrap.schema_ns %>",
   target_namespace: "<%= schema_wrap.target_namespace %>",

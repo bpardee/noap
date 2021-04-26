@@ -1,4 +1,4 @@
-defmodule Noap.Model.Request do
+defmodule Noap.Schema.Request do
   @moduledoc false
 
   @schema_types %{
@@ -16,11 +16,12 @@ defmodule Noap.Model.Request do
   """
   @spec build_request_xml(
           model :: map(),
-          operation :: Noap.Operation.t(),
-          headers :: map()
+          operation :: Noap.WSDL.Operation.t(),
+          headers :: map(),
+          type_map :: map()
         ) :: String.t() | no_return()
-  def build_request_xml(model, operation, headers) do
-    body = build_soap_body(operation, model)
+  def build_request_xml(model, operation, headers, type_map) do
+    body = build_soap_body(operation, model, type_map)
     header = build_soap_header(operation, headers)
 
     [header, body]
@@ -30,9 +31,9 @@ defmodule Noap.Model.Request do
     |> String.replace(["\n", "\t"], "")
   end
 
-  def build_soap_body(operation, model) do
+  def build_soap_body(operation, model, type_map) do
     model
-    |> Noap.Model.to_element_tuples("m")
+    |> to_element_tuples(type_map, "m")
     |> add_action_tag_wrapper(operation)
     |> add_body_tag_wrapper(operation.input_schema.wsdl)
   end
@@ -48,7 +49,7 @@ defmodule Noap.Model.Request do
     |> Enum.map(fn {name, value} -> {name, nil, value} end)
   end
 
-  @spec add_action_tag_wrapper(list(), Noap.Operation.t()) :: list()
+  @spec add_action_tag_wrapper(list(), Noap.WSDL.Operation.t()) :: list()
   def add_action_tag_wrapper(body, operation) do
     op_tag = "#{operation.body_namespace}:#{operation.input_name}"
 
@@ -111,6 +112,33 @@ defmodule Noap.Model.Request do
   @spec build_soap_version_attribute(Map.t()) :: map()
   def build_soap_version_attribute(wsdl) do
     %{"xmlns:#{wsdl.soap_namespace}" => @soap_version_namespaces[wsdl.soap_version]}
+  end
+
+  defp to_element_tuples(model, type_map, env) do
+    to_element_tuples(model, type_map, env, model.__struct__.xml_fields())
+  end
+
+  defp to_element_tuples(model, type_map, env, xml_fields) do
+    Enum.map(
+      xml_fields,
+      fn {field_or_embeds, name, xml_name, type, opts} ->
+        value = Map.get(model, name)
+        element_value = to_element_value(field_or_embeds, type_map, env, value, type, opts)
+
+        # Prepend a tuple which represent an element for xml_builder where 1=name 2=map of attributes (nil for us) 3=value
+        {"#{env}:#{xml_name}", nil, element_value}
+      end
+    )
+  end
+
+  defp to_element_value(:field, type_map, _env, value, type, opts) do
+    module = type_map[type] || raise("Unknown type: #{type}")
+    module.to_str(value, opts)
+  end
+
+  defp to_element_value(embeds, type_map, env, model, child_type, _opts) do
+    model = model || struct(child_type)
+    to_element_tuples(model, type_map, env)
   end
 
   def soap_version(wsdl) do

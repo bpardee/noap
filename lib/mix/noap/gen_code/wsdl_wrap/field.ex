@@ -1,26 +1,22 @@
 defmodule Mix.Noap.GenCode.WSDLWrap.Field do
-  defstruct [:name, :underscored_name, :type, :simple_or_one_or_many]
+  defstruct [:name, :underscored_name, :type, :many?]
 
   alias Mix.Noap.GenCode.WSDLWrap.{ComplexType, Util}
 
-  def new(name, ecto_type, spec \\ :simple) when is_atom(ecto_type) do
-    if spec != :simple do
-      raise "Unexpected simple field spec: #{spec}"
-    end
-
-    do_new(name, ":#{ecto_type}", :simple)
+  def new(name, simple_type, many? = false) when is_atom(simple_type) do
+    do_new(name, simple_type, many?)
   end
 
-  def new(name, complex_type = %ComplexType{}, one_or_many) do
-    do_new(name, complex_type.module, one_or_many)
+  def new(name, complex_type = %ComplexType{}, many?) do
+    do_new(name, complex_type, many?)
   end
 
-  defp do_new(name, type, simple_or_one_or_many) do
+  defp do_new(name, type, many?) do
     %__MODULE__{
       name: name,
       underscored_name: Util.underscore(name),
       type: type,
-      simple_or_one_or_many: simple_or_one_or_many
+      many?: many?
     }
   end
 end
