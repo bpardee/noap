@@ -1,10 +1,11 @@
-defmodule Noap.Schema.Response do
+defmodule Noap.XMLSchema.Response do
   @moduledoc """
   Provides a functions for parse an xml-like response body.
   """
 
   require Logger
   import SweetXml, only: [xpath: 2, sigil_x: 2, add_namespace: 3]
+  alias Noap.XMLField
 
   @soap_version_namespaces %{
     "1.1" => "http://schemas.xmlsoap.org/soap/envelope/",
@@ -53,30 +54,40 @@ defmodule Noap.Schema.Response do
   # @spec parse_record(tuple()) :: map() | String.t()
   defp parse_model(node, body_namespace, module, opts, type_map) do
     Enum.reduce(
-      module.xml_fields,
+      Keyword.get(opts, :xml_fields, module.xml_fields),
       module.__struct__,
-      fn {field_or_embeds, name, xml_name, type, opts}, model ->
-        value = parse_field(node, body_namespace, field_or_embeds, xml_name, type, opts, type_map)
-        Map.put(model, name, value)
+      fn xml_field, model ->
+        value = parse_field(node, body_namespace, xml_field, type_map)
+        Map.put(model, xml_field.name, value)
       end
     )
   end
 
-  defp parse_field(node, body_namespace, :field, xml_name, type, opts, type_map) do
-    body_xpath(node, body_namespace, ~x"body:#{xml_name}/text()"s)
+  defp parse_field(node, body_namespace, xml_field = %XMLField{field_or_embeds: :field}, type_map) do
+    body_xpath(node, body_namespace, ~x"body:#{xml_field.xml_name}/text()"s)
     |> String.trim()
     |> Noap.Util.nil_if_empty()
-    |> from_str(type, opts, type_map)
+    |> from_str(xml_field.type, xml_field.opts, type_map)
   end
 
-  defp parse_field(node, body_namespace, :embeds_one, xml_name, child_module, opts, type_map) do
-    body_xpath(node, body_namespace, ~x"body:#{xml_name}"e)
-    |> parse_model(body_namespace, child_module, opts, type_map)
+  defp parse_field(
+         node,
+         body_namespace,
+         xml_field = %XMLField{field_or_embeds: :embeds_one},
+         type_map
+       ) do
+    body_xpath(node, body_namespace, ~x"body:#{xml_field.xml_name}"e)
+    |> parse_model(body_namespace, xml_field.type, xml_field.opts, type_map)
   end
 
-  defp parse_field(node, body_namespace, :embeds_many, xml_name, child_module, opts, type_map) do
-    body_xpath(node, body_namespace, ~x"body:#{xml_name}"l)
-    |> Enum.map(&parse_model(&1, body_namespace, child_module, opts, type_map))
+  defp parse_field(
+         node,
+         body_namespace,
+         xml_field = %XMLField{field_or_embeds: :embeds_many},
+         type_map
+       ) do
+    body_xpath(node, body_namespace, ~x"body:#{xml_field.xml_name}"l)
+    |> Enum.map(&parse_model(&1, body_namespace, xml_field.type, xml_field.opts, type_map))
   end
 
   defp from_str(nil, _type, _opts, _type_map), do: nil
@@ -96,13 +107,6 @@ defmodule Noap.Schema.Response do
         Logger.warn("Unable to parse type=#{type} str=#{str}: #{message_or_atom}")
         nil
     end
-  end
-
-  defp get_child_module(parent_module, field) do
-    {:parameterized, Ecto.Embedded, %Ecto.Embedded{related: module}} =
-      parent_module.__schema__(:type, field)
-
-    module
   end
 
   defp body_xpath(node, body_namespace, body_sigil) do

@@ -1,6 +1,6 @@
 defmodule Noap.Type do
   @moduledoc """
-  Defines a behaviour for converting to/from soap element string elements
+  Defines a behaviour for converting to/from a soap string element
   """
 
   @typedoc "Implements the Noap.Type behaviour"
@@ -24,8 +24,14 @@ defmodule Noap.Type do
     string: __MODULE__.String
   }
 
-  def get_type_map(_app) do
-    @default_map
+  def default_type_map() do
+    @default_type_map
+  end
+
+  def type_map(application) do
+    application
+    |> Application.get_env(:noap_types, [])
+    |> Enum.into(@default_type_map())
   end
 
   defmacro __using__([]) do

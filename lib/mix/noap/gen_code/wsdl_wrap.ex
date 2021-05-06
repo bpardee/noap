@@ -13,7 +13,7 @@ defmodule Mix.Noap.GenCode.WSDLWrap do
     "1.2" => "http://schemas.xmlsoap.org/wsdl/soap12/"
   }
 
-  import SweetXml, only: [add_namespace: 3, xpath: 2, xpath: 3, sigil_x: 2, parse: 2]
+  import SweetXml, only: [xpath: 2, xpath: 3, sigil_x: 2, parse: 2]
 
   import __MODULE__.NamespaceUtil,
     only: [
@@ -22,7 +22,7 @@ defmodule Mix.Noap.GenCode.WSDLWrap do
       add_soap_namespace: 2
     ]
 
-  alias __MODULE__.{ComplexType, Field, OperationWrap, SchemaWrap, Template, Util}
+  alias __MODULE__.{ComplexType, Field, OperationWrap, SchemaWrap, Util}
 
   # defp soap_version, do: Application.fetch_env!(:soap, :globals)[:version]
   defp soap_version, do: "1.1"
@@ -50,53 +50,6 @@ defmodule Mix.Noap.GenCode.WSDLWrap do
     }
   end
 
-  def create_code(wsdl_wrap = %__MODULE__{}, options \\ []) do
-    overrides = get_create_code_overrides(options)
-    IO.inspect("Starting with keys=#{inspect(Map.keys(overrides))}")
-
-    wsdl_wrap.schema_map
-    |> Enum.each(fn {name, schema_wrap} ->
-      schema_overrides = get_nested_overrides(overrides, name)
-
-      schema_wrap.type_map
-      |> Stream.map(fn {name, complex_type} ->
-        nested_overrides = get_nested_overrides(schema_overrides, name)
-        process_complex_type_overrides(complex_type, nested_overrides)
-      end)
-      |> Enum.each(&create_complex_type_code/1)
-    end)
-
-    wsdl_instance = Template.create_wsdl_instance(wsdl_wrap)
-
-    schema_instances =
-      wsdl_wrap.schema_map
-      |> Stream.map(fn {_name, schema_wrap} ->
-        Template.create_schema_instance(schema_wrap)
-      end)
-      |> Enum.join("\n")
-
-    operation_instances =
-      wsdl_wrap.operations
-      |> Stream.map(&Template.create_operation_instance/1)
-      |> Enum.join("\n")
-
-    operation_functions =
-      wsdl_wrap.operations
-      |> Stream.map(&Template.create_operation_function/1)
-      |> Enum.join("\n")
-
-    module_dir = Util.get_module_dir(wsdl_wrap.module_prefix)
-
-    Template.create_service(
-      wsdl_wrap,
-      wsdl_instance,
-      schema_instances,
-      operation_instances,
-      operation_functions
-    )
-    |> Template.save!(module_dir, "service")
-  end
-
   def yamlize(wsdl_wrap = %__MODULE__{}, yaml_file) do
     yaml =
       wsdl_wrap.schema_map
@@ -109,22 +62,8 @@ defmodule Mix.Noap.GenCode.WSDLWrap do
     File.write!(yaml_file, yaml)
   end
 
-  defp get_create_code_overrides(options) do
-    if yaml_file = options[:overrides_file] do
-      YamlElixir.read_from_file!(yaml_file)
-    else
-      options[:overrides] || %{}
-    end
-  end
-
-  defp get_nested_overrides(overrides, name) do
-    name = to_string(name)
-    IO.puts("Looking for #{name} in #{inspect(Map.keys(overrides))}")
-    overrides[name] || %{}
-  end
-
-  defp build_map(%SchemaWrap{type_map: type_map}) do
-    type_map
+  defp build_map(%SchemaWrap{complex_type_map: complex_type_map}) do
+    complex_type_map
     |> Enum.map(fn {name, complex_type} ->
       {name, build_map(complex_type)}
     end)
@@ -145,56 +84,6 @@ defmodule Mix.Noap.GenCode.WSDLWrap do
 
   defp build_map(%Field{}), do: %{}
 
-  defp process_complex_type_overrides(complex_type, overrides) do
-    new_fields =
-      complex_type.fields
-      |> Enum.map(fn field ->
-        convert_field(field, get_nested_overrides(overrides, field.name))
-      end)
-
-    %{complex_type | fields: new_fields}
-  end
-
-  defp convert_field(field = %Field{type: child_complex_type = %ComplexType{}}, overrides) do
-    child_complex_type = process_complex_type_overrides(child_complex_type, overrides)
-    %{field | type: child_complex_type}
-  end
-
-  defp convert_field(field, overrides) do
-    field
-    |> convert_field_type(overrides["type"])
-  end
-
-  defp convert_field_type(field, nil), do: field
-  defp convert_field_type(field, type) when is_atom(type), do: %{field | type: type}
-
-  defp convert_field_type(field, type) when is_binary(type) do
-    if String.starts_with?(type, ":") do
-      type = type |> String.slice(1..-1) |> String.to_atom()
-      %{field | type: type}
-    else
-      raise "Not sure what to do with type=#{type}"
-    end
-  end
-
-  defp create_complex_type_code(complex_type = %ComplexType{parent_dir: parent_dir, name: name}) do
-    Template.create_complex_type(complex_type)
-    |> Template.save!(parent_dir, name)
-
-    complex_type.fields
-    |> Enum.each(fn field ->
-      case field do
-        %Field{type: child_complex_type = %ComplexType{}} ->
-          create_complex_type_code(child_complex_type)
-
-        _ ->
-          nil
-      end
-    end)
-
-    :ok
-  end
-
   defp find_complex_type(schema_map, message_map, message_name) do
     message = message_map[message_name]
 
@@ -214,7 +103,7 @@ defmodule Mix.Noap.GenCode.WSDLWrap do
       raise "Couldn't find action for #{message.name} #{inspect(schema)}"
     end
 
-    type = schema.type_map[action.name]
+    type = schema.complex_type_map[action.name]
 
     if is_nil(type) do
       raise "Couldn't find type for #{action.name} #{inspect(schema)}"
@@ -287,7 +176,7 @@ defmodule Mix.Noap.GenCode.WSDLWrap do
     )
   end
 
-  defp get_operations(doc, schema_map, message_map, opts) do
+  defp get_operations(doc, schema_map, message_map, _opts) do
     doc
     |> xpath(
       ~x"wsdl:portType/wsdl:operation"l

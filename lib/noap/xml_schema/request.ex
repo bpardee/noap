@@ -1,5 +1,7 @@
-defmodule Noap.Schema.Request do
+defmodule Noap.XMLSchema.Request do
   @moduledoc false
+
+  alias Noap.XMLField
 
   @schema_types %{
     "xmlns:xsd" => "http://www.w3.org/2001/XMLSchema",
@@ -121,23 +123,23 @@ defmodule Noap.Schema.Request do
   defp to_element_tuples(model, type_map, env, xml_fields) do
     Enum.map(
       xml_fields,
-      fn {field_or_embeds, name, xml_name, type, opts} ->
-        value = Map.get(model, name)
-        element_value = to_element_value(field_or_embeds, type_map, env, value, type, opts)
+      fn xml_field ->
+        value = Map.get(model, xml_field.name)
+        element_value = to_element_value(xml_field, type_map, env, value)
 
         # Prepend a tuple which represent an element for xml_builder where 1=name 2=map of attributes (nil for us) 3=value
-        {"#{env}:#{xml_name}", nil, element_value}
+        {"#{env}:#{xml_field.xml_name}", nil, element_value}
       end
     )
   end
 
-  defp to_element_value(:field, type_map, _env, value, type, opts) do
-    module = type_map[type] || raise("Unknown type: #{type}")
-    module.to_str(value, opts)
+  defp to_element_value(xml_field = %XMLField{field_or_embeds: :field}, type_map, _env, value) do
+    module = type_map[xml_field.type] || raise("Unknown type: #{xml_field.type}")
+    module.to_str(value, xml_field.opts)
   end
 
-  defp to_element_value(embeds, type_map, env, model, child_type, _opts) do
-    model = model || struct(child_type)
+  defp to_element_value(xml_field, type_map, env, model) do
+    model = model || struct(xml_field.type)
     to_element_tuples(model, type_map, env)
   end
 

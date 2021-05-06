@@ -1,7 +1,15 @@
-defmodule Noap.Schema do
+defmodule Noap.XMLSchema do
+  alias Noap.XMLField
+
+  @callback from_map(Map.t(), opts :: Keyword.t()) :: any
+
+  @optional_callbacks from_map: 2
+
   defmacro __using__(_) do
     quote do
-      import Noap.Schema, only: [xml_schema: 1]
+      @behaviour Noap.MultiType
+
+      import Noap.XMLSchema, only: [xml_schema: 1]
     end
   end
 
@@ -11,7 +19,7 @@ defmodule Noap.Schema do
 
   defmacro field(name, xml_name, type, opts \\ []) do
     quote do
-      Noap.Schema.__field__(
+      Noap.XMLSchema.__field__(
         __MODULE__,
         :field,
         unquote(name),
@@ -22,9 +30,22 @@ defmodule Noap.Schema do
     end
   end
 
+  defmacro multi_field(name, type, opts \\ []) do
+    quote do
+      Noap.XMLSchema.__field__(
+        __MODULE__,
+        :multi_field,
+        unquote(name),
+        nil,
+        unquote(type),
+        unquote(opts)
+      )
+    end
+  end
+
   defmacro embeds_one(name, xml_name, type, opts \\ []) do
     quote do
-      Noap.Schema.__field__(
+      Noap.XMLSchema.__field__(
         __MODULE__,
         :embeds_one,
         unquote(name),
@@ -37,7 +58,7 @@ defmodule Noap.Schema do
 
   defmacro embeds_many(name, xml_name, type, opts \\ []) do
     quote do
-      Noap.Schema.__field__(
+      Noap.XMLSchema.__field__(
         __MODULE__,
         :embeds_many,
         unquote(name),
@@ -55,7 +76,7 @@ defmodule Noap.Schema do
         Module.register_attribute(__MODULE__, :struct_fields, accumulate: true)
 
         try do
-          import Noap.Schema
+          import Noap.XMLSchema
           unquote(block)
         after
           :ok
@@ -68,7 +89,11 @@ defmodule Noap.Schema do
         # Put them back in the order they were originally listed
         @xml_fields_reversed Enum.reverse(@xml_fields)
 
-        def xml_fields, do: @xml_fields_reversed
+        @impl Noap.MultiType
+        def xml_fields(_opts), do: @xml_fields_reversed
+
+        @impl Noap.MultiType
+        def from_map(map, _opts), do: {:ok, struct(__MODULE__, map)}
       end
 
     quote do
@@ -79,7 +104,12 @@ defmodule Noap.Schema do
 
   @doc false
   def __field__(mod, field_or_embeds, name, xml_name, type, opts) do
-    Module.put_attribute(mod, :xml_fields, {field_or_embeds, name, xml_name, type, opts})
+    Module.put_attribute(
+      mod,
+      :xml_fields,
+      XMLField.new(field_or_embeds, name, xml_name, type, opts)
+    )
+
     Module.put_attribute(mod, :struct_fields, name)
   end
 end

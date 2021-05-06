@@ -7,7 +7,7 @@ defmodule Mix.Noap.GenCode.WSDLWrap.SchemaWrap do
     :module,
     :dir,
     :top_types,
-    :type_map
+    :complex_type_map
   ]
 
   @type_to_ecto_map %{
@@ -82,10 +82,10 @@ defmodule Mix.Noap.GenCode.WSDLWrap.SchemaWrap do
       module: module,
       dir: dir,
       top_types: top_types,
-      type_map: nil
+      complex_type_map: nil
     }
 
-    type_map =
+    complex_type_map =
       schema_element
       |> xpath(
         ~x"xsd:complexType"l
@@ -94,14 +94,14 @@ defmodule Mix.Noap.GenCode.WSDLWrap.SchemaWrap do
       |> Enum.map(&parse_complex_type(schema, &1, nil))
       |> Enum.into(%{}, &{&1.name, &1})
 
-    schema = %{schema | type_map: type_map}
+    schema = %{schema | complex_type_map: complex_type_map}
 
-    type_map =
+    complex_type_map =
       top_type_elements
       |> Enum.map(&parse_type(schema, &1, nil))
-      |> Enum.into(type_map, &{&1.name, &1})
+      |> Enum.into(complex_type_map, &{&1.name, &1})
 
-    %{schema | type_map: type_map}
+    %{schema | complex_type_map: complex_type_map}
   end
 
   defp parse_complex_type(schema, parent_element, parent_complex_type) do
@@ -190,7 +190,7 @@ defmodule Mix.Noap.GenCode.WSDLWrap.SchemaWrap do
   end
 
   defp find_complex_type(schema, name) do
-    schema.type_map[name]
+    schema.complex_type_map[name]
   end
 
   defp parse_type(schema, parent_element, parent_complex_type) do

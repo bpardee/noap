@@ -1,5 +1,5 @@
 defmodule <%= complex_type.module %> do
-  use Noap.Schema
+  use Noap.XMLSchema
 
   xml_schema do
     <%= xml_fields(complex_type) %>

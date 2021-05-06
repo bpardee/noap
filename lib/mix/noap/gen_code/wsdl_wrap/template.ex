@@ -50,14 +50,7 @@ defmodule Mix.Noap.GenCode.WSDLWrap.Template do
 
   defp xml_fields(complex_type) do
     complex_type.fields
-    |> Stream.map(fn field ->
-      {spec, tname} = spec_type_pair(field)
-      "#{spec}(:#{field.underscored_name}, \"#{field.name}\", #{tname})"
-    end)
+    |> Stream.map(&Field.line/1)
     |> Enum.join("\n")
   end
-
-  defp spec_type_pair(%Field{type: type}) when is_atom(type), do: {"field", ":#{type}"}
-  defp spec_type_pair(%Field{type: %ComplexType{module: m}, many?: false}), do: {"embeds_one", m}
-  defp spec_type_pair(%Field{type: %ComplexType{module: m}, many?: true}), do: {"embeds_many", m}
 end
