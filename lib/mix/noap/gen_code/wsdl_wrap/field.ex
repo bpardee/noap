@@ -1,46 +1,41 @@
 defmodule Mix.Noap.GenCode.WSDLWrap.Field do
-  defstruct [:xml_name, :name, :type, :many?, :options]
+  defstruct [:field_or_embed, :xml_name, :name, :type, :options]
 
   alias Mix.Noap.GenCode.WSDLWrap.{ComplexType, Util}
 
-  def new(xml_name, simple_type, many? = false) when is_atom(simple_type) do
-    do_new(xml_name, Util.underscore(xml_name), simple_type, many?)
+  def new(field_or_embeds, xml_name, simple_type) when is_atom(simple_type) do
+    do_new(field_or_embeds, xml_name, Util.underscore(xml_name), simple_type)
   end
 
-  def new(xml_name, complex_type = %ComplexType{}, many?) do
-    do_new(xml_name, Util.underscore(xml_name), complex_type, many?)
+  def new(embeds, xml_name, complex_type = %ComplexType{}) do
+    do_new(embeds, xml_name, Util.underscore(xml_name), complex_type)
   end
 
-  # Called via overrides, doesn't occur during normal generation
-  def new(name, multi_type, many? = true, options) when is_atom(multi_type) do
-    do_new(nil, name, multi_type, many?, options)
+  def new_override(embeds, name, embed_type, options) do
+    do_new(embeds, nil, name, embed_type, options)
   end
 
-  defp do_new(xml_name, name, type, many?, options \\ %{}) do
+  defp do_new(field_or_embed, xml_name, name, type, options \\ %{}) do
     %__MODULE__{
+      field_or_embed: field_or_embed,
       xml_name: xml_name,
       name: name,
       type: type,
-      many?: many?,
       options: options
     }
   end
 
-  def line(field = %__MODULE__{type: type, many?: false}) when is_atom(type) do
-    "field :#{field.name}, \"#{field.xml_name}\", :#{type}"
+  def line(field = %__MODULE__{type: %ComplexType{module: module}}) do
+    do_line(field, "#{module}")
   end
 
-  def line(field = %__MODULE__{type: type, many?: true}) when is_atom(type) do
-    "multi_field :#{field.name}, :#{type}" <> line_append_options(field.options)
-    # ", min: :days_14, max: :years_3, xml_prefix: "NbrOfNDDAInqsInPast"
+  def line(field = %__MODULE__{type: type}) do
+    do_line(field, ":#{type}")
   end
 
-  def line(field = %__MODULE__{type: %ComplexType{module: module}, many?: false}) do
-    "embeds_one :#{field.name}, \"#{field.xml_name}\", #{module}"
-  end
-
-  def line(field = %__MODULE__{type: %ComplexType{module: module}, many?: true}) do
-    "embeds_many :#{field.name}, \"#{field.xml_name}\", #{module}"
+  defp do_line(field, type) do
+    "#{field.field_or_embed} :#{field.name}, #{inspect(field.xml_name)}, #{type}" <>
+      line_append_options(field.options)
   end
 
   defp line_append_options(options) when options == %{}, do: ""

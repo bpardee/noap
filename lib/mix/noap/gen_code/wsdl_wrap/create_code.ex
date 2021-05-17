@@ -57,37 +57,9 @@ defmodule Mix.Noap.GenCode.WSDLWrap.CreateCode do
   end
 
   defp process_complex_type_overrides(complex_type, type_map, overrides) do
-    {multi_type_fields, replaced_xml_names} =
-      (overrides[:multi_type_fields] || [])
-      # Allows maintaining of key order (doesn't work!)
-      # |> Enum.to_list()
-      |> Enum.reduce(
-        {[], []},
-        fn {name, options}, {multi_type_fields, replaced_xml_names} ->
-          {type, options} = Map.pop(options, :type)
-
-          if is_nil(type) do
-            raise "Must specify type for overfide of #{name} in #{complex_type.name}"
-          end
-
-          if !is_atom(type) do
-            raise "Must specify an atom for type for override of #{name} in #{complex_type.name}"
-          end
-
-          multi_type_field = Field.new(name, type, _many? = true, options)
-          multi_type = type_map[type]
-
-          if is_nil(multi_type) do
-            raise "No mapping for type #{type}"
-          end
-
-          xml_names =
-            multi_type.xml_fields(options)
-            |> Enum.map(& &1.xml_name)
-
-          {[multi_type_field | multi_type_fields], xml_names ++ replaced_xml_names}
-        end
-      )
+    {embed_one_fields, embed_one_xml_names} = process_embed_overrides(complex_type, type_map, :embeds_one, overrides[:embeds_one])
+    {embed_many_fields, embed_many_xml_names} = process_embed_overrides(complex_type, type_map, :embeds_many, overrides[:embeds_many])
+    replaced_xml_names = embed_one_xml_names ++ embed_many_xml_names
 
     new_fields =
       complex_type.fields
@@ -105,7 +77,43 @@ defmodule Mix.Noap.GenCode.WSDLWrap.CreateCode do
         convert_field(field, type_map, get_nested_overrides(overrides, field.xml_name))
       end)
 
-    %{complex_type | fields: Enum.reverse(multi_type_fields ++ new_fields)}
+    %{complex_type | fields: Enum.reverse(embed_many_fields ++ embed_one_fields ++ new_fields)}
+  end
+
+  defp process_embed_overrides(complex_type, type_map, one_or_many, embed_overrides) do
+    (embed_overrides || [])
+    # Allows maintaining of key order (doesn't work!)
+    # |> Enum.to_list()
+    |> Enum.reduce(
+      {[], []},
+      fn {name, options}, {embed_fields, replaced_xml_names} ->
+        {type, options} = Map.pop(options, :type)
+
+        if is_nil(type) do
+          raise "Must specify type for overfide of #{name} in #{complex_type.name}"
+        end
+
+        if !is_atom(type) do
+          raise "Must specify an atom for type for override of #{name} in #{complex_type.name}"
+        end
+
+        embed_field = Field.new_override(one_or_many, name, type, options)
+        embed_type = type_map[type]
+
+        if is_nil(embed_type) do
+          raise "No mapping for type #{type}"
+        end
+
+        xml_names =
+          embed_type.xml_map(options)
+          |> Enum.map(fn {key, value} ->
+            # Parent xml nodes will be in the key, simple fields will be the value
+            if is_binary(key), do: key, else: value
+          end)
+
+        {[embed_field | embed_fields], xml_names ++ replaced_xml_names}
+      end
+    )
   end
 
   defp get_nested_overrides(overrides, xml_name) do

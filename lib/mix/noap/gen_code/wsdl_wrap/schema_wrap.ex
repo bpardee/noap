@@ -131,44 +131,42 @@ defmodule Mix.Noap.GenCode.WSDLWrap.SchemaWrap do
   end
 
   defp parse_field(schema, element, parent_complex_type) do
-    name = element |> xpath(~x"@name"s)
-    type = element |> xpath(~x"@type"s)
-
-    if name == "" do
+    xml_name = element |> xpath(~x"@name"s)
+    if xml_name == "" do
       raise "Not sure how to parse type without name #{inspect(element)}"
     end
 
-    case type do
+    case element |> xpath(~x"@type"s) do
       "" ->
         field_type = parse_type(schema, element, parent_complex_type)
         max_occurs = element |> xpath(~x"@maxOccurs"s)
 
-        many? =
+        embeds =
           cond do
-            is_atom(field_type) -> false
-            max_occurs == "" || String.to_integer(max_occurs) <= 1 -> false
-            true -> true
+            is_atom(field_type) -> :field
+            max_occurs == "" || String.to_integer(max_occurs) <= 1 -> :embeds_one
+            true -> :embeds_many
           end
 
-        Field.new(name, field_type, many?)
+        Field.new(embeds, xml_name, field_type)
 
-      type ->
-        get_simple_field(schema, name, type)
+      xml_type ->
+        get_simple_field(schema, xml_name, xml_type)
     end
   end
 
-  defp get_simple_field(schema, name, type) do
-    converted_type = convert_type(schema, type)
-    Field.new(name, converted_type, _many? = false)
+  defp get_simple_field(schema, xml_name, xml_type) do
+    type = convert_type(schema, xml_type)
+    Field.new(:field, xml_name, type)
   end
 
-  defp convert_type(schema, type) do
-    case String.split(type, ":", parts: 2) do
+  defp convert_type(schema, xml_type) do
+    case String.split(xml_type, ":", parts: 2) do
       [simple_type] ->
         ecto_type = @type_to_ecto_map[simple_type]
 
         if is_nil(ecto_type) do
-          raise("Not sure how to handle type=#{type}")
+          raise("Not sure how to handle type=#{xml_type}")
         end
 
         ecto_type
