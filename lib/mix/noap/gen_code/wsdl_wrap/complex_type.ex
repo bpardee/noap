@@ -1,32 +1,22 @@
 defmodule Mix.Noap.GenCode.WSDLWrap.ComplexType do
   defstruct [
-    :module,
-    :parent_dir,
+    :parent_module,
     :name,
-    :underscored_name,
     :fields
   ]
 
-  alias Mix.Noap.GenCode.WSDLWrap.{Field, Template, Util}
+  alias Mix.Noap.GenCode.WSDLWrap.{Field, Util}
 
-  def new(parent_module, parent_dir, name, _parent = nil) do
+  def new(parent_module, name, _parent = nil) do
     %__MODULE__{
-      module: "#{parent_module}.#{name}",
-      parent_dir: parent_dir,
+      parent_module: parent_module,
       name: name,
-      underscored_name: Util.underscore(name),
       fields: []
     }
   end
 
-  def new(_parent_module, _parent_dir, name, %__MODULE__{
-        module: parent_module,
-        parent_dir: grandparent_dir,
-        name: parent_name
-      }) do
-    parent_dir = Path.join(grandparent_dir, Util.underscore(parent_name))
-    File.mkdir_p!(parent_dir)
-    new(parent_module, parent_dir, name, nil)
+  def new(_parent_module, name, %__MODULE__{parent_module: grand_parent_module, name: parent_name}) do
+    new("#{grand_parent_module}.#{parent_name}", name, nil)
   end
 
   def add_field(complex_type = %__MODULE__{}, field = %Field{}) do

@@ -125,7 +125,11 @@ defmodule Mix.Noap.GenCode.WSDLWrap.CreateCode do
     overrides[xml_name] || %{}
   end
 
-  defp create_complex_type_code(complex_type = %ComplexType{parent_dir: parent_dir, name: name}) do
+  defp create_complex_type_code(
+         complex_type = %ComplexType{parent_module: parent_module, name: name}
+       ) do
+    parent_dir = Util.get_module_dir(parent_module)
+
     Template.create_complex_type(complex_type)
     |> Template.save!(parent_dir, name)
 

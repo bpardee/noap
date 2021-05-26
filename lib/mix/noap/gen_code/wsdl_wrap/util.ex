@@ -41,28 +41,15 @@ defmodule Mix.Noap.GenCode.WSDLWrap.Util do
     |> Enum.join("_")
   end
 
-  def convert_url_to_module(url, parent_module, module_dir) do
-    split_host =
-      URI.parse(url).host
-      |> String.split(".")
-      |> remove_common_host_front()
-      |> Enum.reverse()
-      |> remove_common_host_domain()
-
-    postfix =
-      split_host
-      |> Stream.map(&:string.titlecase/1)
-      |> Enum.join(".")
-
-    reldir =
-      split_host
-      |> Enum.map(&underscore/1)
-      |> Path.join()
-
-    dir = Path.join(module_dir, reldir)
-    File.mkdir_p!(dir)
-
-    {"#{parent_module}.#{postfix}", dir}
+  def convert_url_to_module(url, parent_module) do
+    URI.parse(url).host
+    |> String.split(".")
+    |> remove_common_host_front()
+    |> Enum.reverse()
+    |> remove_common_host_domain()
+    |> Stream.map(&:string.titlecase/1)
+    |> Enum.join(".")
+    |> String.replace_prefix("", "#{parent_module}.")
   end
 
   def to_yaml(map, indentation \\ "") do

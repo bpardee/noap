@@ -69,7 +69,7 @@ defmodule Noap.XMLSchema.Request do
   end
 
   @spec get_header_with_namespace(operation :: String.t()) :: String.t()
-  def get_header_with_namespace(operation) do
+  def get_header_with_namespace(_operation) do
     # with %{input: %{header: %{message: message, part: part}}} <-
     #        Enum.find(wsdl[:operations], &(&1[:name] == operation)),
     #      %{name: name} <- get_message_part(wsdl, message, part) do

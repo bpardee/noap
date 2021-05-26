@@ -5,7 +5,6 @@ defmodule Mix.Noap.GenCode.WSDLWrap.SchemaWrap do
     :element_form_default,
     :target_ns,
     :module,
-    :dir,
     :top_types,
     :complex_type_map
   ]
@@ -33,7 +32,7 @@ defmodule Mix.Noap.GenCode.WSDLWrap.SchemaWrap do
 
   import WSDLWrap.NamespaceUtil, only: [add_schema_namespace: 2]
 
-  def new(schema_ns, parent_module, parent_dir, schema_element, namespace_map, options) do
+  def new(schema_ns, parent_module, schema_element, namespace_map, options) do
     %{
       target_namespace: target_namespace,
       element_form_default: element_form_default
@@ -49,11 +48,9 @@ defmodule Mix.Noap.GenCode.WSDLWrap.SchemaWrap do
 
     target_ns = Noap.XMLUtil.find_namespace(schema_element, target_namespace) |> String.to_atom()
 
-    {module, dir} =
-      case Options.schema_module(options, target_ns) do
-        nil -> Util.convert_url_to_module(target_namespace, parent_module, parent_dir)
-        module -> {module, Util.get_module_dir(module)}
-      end
+    module =
+      Options.schema_module(options, target_ns) ||
+        Util.convert_url_to_module(target_namespace, parent_module)
 
     top_type_elements =
       schema_element
@@ -80,7 +77,6 @@ defmodule Mix.Noap.GenCode.WSDLWrap.SchemaWrap do
       target_ns: target_ns,
       element_form_default: element_form_default,
       module: module,
-      dir: dir,
       top_types: top_types,
       complex_type_map: nil
     }
@@ -120,7 +116,7 @@ defmodule Mix.Noap.GenCode.WSDLWrap.SchemaWrap do
 
     Enum.reduce(
       elements,
-      ComplexType.new(schema.module, schema.dir, name, parent_complex_type),
+      ComplexType.new(schema.module, name, parent_complex_type),
       fn element, complex_type ->
         field = parse_field(schema, element, complex_type)
         ComplexType.add_field(complex_type, field)

@@ -28,15 +28,13 @@ defmodule Mix.Noap.GenCode.WSDLWrap do
   defp soap_version, do: "1.1"
   defp soap_version(opts) when is_list(opts), do: Keyword.get(opts, :soap_version, soap_version())
 
-  @spec new(String.t(), String.t(), keyword()) :: {:ok, map()}
   def new(wsdl_path, module_prefix, options \\ []) do
     str = File.read!(wsdl_path)
     doc = parse(str, namespace_conformant: true)
     schema_ns = Noap.XMLUtil.find_namespace(doc, "http://www.w3.org/2001/XMLSchema")
     endpoint = get_endpoint(doc)
     namespace_map = get_namespace_map(doc)
-    module_dir = Util.get_module_dir(module_prefix)
-    schema_map = get_schema_map(doc, schema_ns, module_prefix, module_dir, namespace_map, options)
+    schema_map = get_schema_map(doc, schema_ns, module_prefix, namespace_map, options)
     message_map = get_message_map(doc)
     operations = get_operations(doc, schema_map, message_map, options)
 
@@ -122,17 +120,7 @@ defmodule Mix.Noap.GenCode.WSDLWrap do
     {to_string(ns), to_string(namespace)}
   end
 
-  defp build_schema_instance({ns, schema}) do
-    {ns,
-     %Noap.WSDL.Schema{
-       schema_ns: schema.schema_ns,
-       target_namespace: schema.target_namespace,
-       target_ns: schema.target_ns,
-       action_tag_attributes: action_tag_attributes(schema)
-     }}
-  end
-
-  defp get_schema_map(doc, schema_ns, module_prefix, module_dir, namespace_map, options) do
+  defp get_schema_map(doc, schema_ns, module_prefix, namespace_map, options) do
     doc
     |> xpath(
       ~x"wsdl:types/xsd:schema"l
@@ -146,7 +134,6 @@ defmodule Mix.Noap.GenCode.WSDLWrap do
           __MODULE__.SchemaWrap.new(
             schema_ns,
             module_prefix,
-            module_dir,
             schema_node,
             namespace_map,
             options

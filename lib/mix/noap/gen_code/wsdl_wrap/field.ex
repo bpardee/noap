@@ -25,8 +25,8 @@ defmodule Mix.Noap.GenCode.WSDLWrap.Field do
     }
   end
 
-  def line(field = %__MODULE__{type: %ComplexType{module: module}}) do
-    do_line(field, "#{module}")
+  def line(field = %__MODULE__{type: %ComplexType{parent_module: parent_module, name: name}}) do
+    do_line(field, "#{parent_module}.#{name}")
   end
 
   def line(field = %__MODULE__{type: type}) do

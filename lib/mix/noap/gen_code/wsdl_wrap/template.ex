@@ -1,7 +1,7 @@
 defmodule Mix.Noap.GenCode.WSDLWrap.Template do
   require EEx
 
-  alias Mix.Noap.GenCode.WSDLWrap.{ComplexType, Field, Util}
+  alias Mix.Noap.GenCode.WSDLWrap.{Field, Util}
 
   defmodule EExPath do
     def get(name) do
