@@ -47,7 +47,7 @@ defmodule Mix.Noap.GenCode.WSDLWrap.SchemaWrap do
       raise "Not sure how to handle with no targetNamespace: #{inspect(schema_element)}"
     end
 
-    target_ns = Noap.XML.find_namespace(schema_element, target_namespace) |> String.to_atom()
+    target_ns = Noap.XMLUtil.find_namespace(schema_element, target_namespace) |> String.to_atom()
 
     {module, dir} =
       case Options.schema_module(options, target_ns) do
@@ -132,6 +132,7 @@ defmodule Mix.Noap.GenCode.WSDLWrap.SchemaWrap do
 
   defp parse_field(schema, element, parent_complex_type) do
     xml_name = element |> xpath(~x"@name"s)
+
     if xml_name == "" do
       raise "Not sure how to parse type without name #{inspect(element)}"
     end

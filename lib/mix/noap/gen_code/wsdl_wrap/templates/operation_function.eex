@@ -1,8 +1,3 @@
-def <%= wrap.underscored_name %>(<%= wrap.input_complex_type.underscored_name %>) do
-  # Noap.Service.perform_operation(etc)
-  @<%= wrap.underscored_name %>_operation
-end
-
-def <%= wrap.underscored_name %>_operation do
-  @<%= wrap.underscored_name %>_operation
+def <%= wrap.underscored_name %> do
+  @<%= wrap.underscored_name %>
 end

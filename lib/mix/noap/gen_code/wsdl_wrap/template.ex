@@ -17,7 +17,7 @@ defmodule Mix.Noap.GenCode.WSDLWrap.Template do
     :wrap
   ])
 
-  EEx.function_from_file(:def, :create_service, EExPath.get("service"), [
+  EEx.function_from_file(:def, :create_operations, EExPath.get("operations"), [
     :wrap,
     :wsdl_instance,
     :schema_instances,

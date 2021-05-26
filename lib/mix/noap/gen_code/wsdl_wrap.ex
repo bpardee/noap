@@ -32,7 +32,7 @@ defmodule Mix.Noap.GenCode.WSDLWrap do
   def new(wsdl_path, module_prefix, options \\ []) do
     str = File.read!(wsdl_path)
     doc = parse(str, namespace_conformant: true)
-    schema_ns = Noap.XML.find_namespace(doc, "http://www.w3.org/2001/XMLSchema")
+    schema_ns = Noap.XMLUtil.find_namespace(doc, "http://www.w3.org/2001/XMLSchema")
     endpoint = get_endpoint(doc)
     namespace_map = get_namespace_map(doc)
     module_dir = Util.get_module_dir(module_prefix)
@@ -73,7 +73,7 @@ defmodule Mix.Noap.GenCode.WSDLWrap do
   defp build_map(%ComplexType{fields: fields}) do
     fields
     |> Enum.map(fn field ->
-      {field.name, build_map(field)}
+      {field.xml_name, build_map(field)}
     end)
     |> Enum.into(%{})
   end

@@ -9,9 +9,12 @@ defmodule Noap.WSDL.Operation do
     :output_module,
     :action_attribute,
     :action_tag,
-    {:body_namespace, :m}
+    {:body_namespace, :m},
     # :soap_action,
     # :action_ns,
     # :action_tag_attributes,
+    :application,
+    :type_map,
+    :endpoint
   ]
 end

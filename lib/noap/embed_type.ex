@@ -23,7 +23,7 @@ defmodule Noap.EmbedType do
               | {:error, atom}
               | no_return()
 
-  @callback to_map(embed_type :: any(), type_map :: map(), remove_if_nil :: boolean()) ::
+  @callback to_map(embed_type :: any(), type_map :: map(), remove_if_nil? :: boolean()) ::
               value :: any()
 
   defmacro __using__(_) do
@@ -44,18 +44,18 @@ defmodule Noap.EmbedType do
       end
 
       @impl Noap.EmbedType
-      def to_map(embed_type, _type_map, remove_if_nil \\ true) do
-        Noap.EmbedType.__to_map__(embed_type, remove_if_nil)
+      def to_map(embed_type, _type_map, remove_if_nil? \\ true) do
+        Noap.EmbedType.__to_map__(embed_type, remove_if_nil?)
       end
 
       defoverridable Noap.EmbedType
     end
   end
 
-  def __to_map__(embed_type, remove_if_nil) do
+  def __to_map__(embed_type, remove_if_nil?) do
     map = Map.from_struct(embed_type)
 
-    if remove_if_nil do
+    if remove_if_nil? do
       keyword =
         map
         |> Enum.reject(fn {_, v} -> is_nil(v) end)

@@ -5,37 +5,16 @@ defmodule Noap.XMLSchema.Response do
 
   require Logger
   import SweetXml, only: [xpath: 2, sigil_x: 2, add_namespace: 3]
+  import Noap.XMLUtil, only: [add_soap_namespace: 2]
   alias Noap.XMLField
 
-  @soap_version_namespaces %{
-    "1.1" => "http://schemas.xmlsoap.org/soap/envelope/",
-    "1.2" => "http://www.w3.org/2003/05/soap-envelope"
-  }
-  @doc """
-  Executing with xml response body.
-
-  If a list is empty then `parse/1` returns full parsed response structure into map.
-  """
-  @spec parse_fault(String.t()) :: map()
-  def parse_fault(body) do
-    doc = SweetXml.parse(body, namespace_conformant: true)
-
-    doc
-    |> xpath(
-      ~x"soap:Fault/*"l
-      |> add_namespace("soap", "http://schemas.xmlsoap.org/soap/envelope/")
-    )
-
-    # |> parse_elements()
-  end
-
-  def parse_response_xml(body, operation, type_map) do
+  def parse_soap_response(body, operation, type_map) do
     doc = SweetXml.parse(body, namespace_conformant: true)
 
     body_node =
       xpath(
         doc,
-        ~x"soap:Body"e |> add_namespace("soap", "http://schemas.xmlsoap.org/soap/envelope/")
+        ~x"soap:Body"e |> add_soap_namespace("soap")
       )
 
     body_node

@@ -38,14 +38,14 @@ defmodule Mix.Noap.GenCode.WSDLWrap.CreateCode do
 
     module_dir = Util.get_module_dir(wsdl_wrap.module_prefix)
 
-    Template.create_service(
+    Template.create_operations(
       wsdl_wrap,
       wsdl_instance,
       schema_instances,
       operation_instances,
       operation_functions
     )
-    |> Template.save!(module_dir, "service")
+    |> Template.save!(module_dir, "operations")
   end
 
   defp get_create_code_overrides(options) do
@@ -57,8 +57,12 @@ defmodule Mix.Noap.GenCode.WSDLWrap.CreateCode do
   end
 
   defp process_complex_type_overrides(complex_type, type_map, overrides) do
-    {embed_one_fields, embed_one_xml_names} = process_embed_overrides(complex_type, type_map, :embeds_one, overrides[:embeds_one])
-    {embed_many_fields, embed_many_xml_names} = process_embed_overrides(complex_type, type_map, :embeds_many, overrides[:embeds_many])
+    {embed_one_fields, embed_one_xml_names} =
+      process_embed_overrides(complex_type, type_map, :embeds_one, overrides[:embeds_one])
+
+    {embed_many_fields, embed_many_xml_names} =
+      process_embed_overrides(complex_type, type_map, :embeds_many, overrides[:embeds_many])
+
     replaced_xml_names = embed_one_xml_names ++ embed_many_xml_names
 
     new_fields =

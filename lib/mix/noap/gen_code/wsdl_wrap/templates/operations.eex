@@ -1,0 +1,11 @@
+defmodule <%= wrap.module_prefix %>.Operations do
+  @application Mix.Project.config()[:app]
+
+  <%= wsdl_instance %>
+
+  <%= schema_instances %>
+
+  <%= operation_instances %>
+
+  <%= operation_functions %>
+end
