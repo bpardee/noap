@@ -8,7 +8,7 @@ defmodule Noap.XMLSchema.Response do
   import Noap.XMLUtil, only: [add_soap_namespace: 2]
   alias Noap.XMLField
 
-  def parse_soap_response(body, operation, type_map) do
+  def parse_soap_response(body, operation) do
     doc = SweetXml.parse(body, namespace_conformant: true)
 
     body_node =
@@ -25,7 +25,7 @@ defmodule Noap.XMLSchema.Response do
     |> parse_xml_schema(
       operation.output_schema.target_namespace,
       operation.output_module,
-      type_map
+      operation.type_map
     )
   end
 

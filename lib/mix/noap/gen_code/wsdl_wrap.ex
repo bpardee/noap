@@ -8,10 +8,10 @@ defmodule Mix.Noap.GenCode.WSDLWrap do
     :message_map
   ]
 
-  @soap_version_namespaces %{
-    "1.1" => "http://schemas.xmlsoap.org/wsdl/soap/",
-    "1.2" => "http://schemas.xmlsoap.org/wsdl/soap12/"
-  }
+  # @soap_version_namespaces %{
+  #   "1.1" => "http://schemas.xmlsoap.org/wsdl/soap/",
+  #   "1.2" => "http://schemas.xmlsoap.org/wsdl/soap12/"
+  # }
 
   import SweetXml, only: [xpath: 2, xpath: 3, sigil_x: 2, parse: 2]
 
@@ -25,8 +25,8 @@ defmodule Mix.Noap.GenCode.WSDLWrap do
   alias __MODULE__.{ComplexType, Field, OperationWrap, SchemaWrap, Util}
 
   # defp soap_version, do: Application.fetch_env!(:soap, :globals)[:version]
-  defp soap_version, do: "1.1"
-  defp soap_version(opts) when is_list(opts), do: Keyword.get(opts, :soap_version, soap_version())
+  # defp soap_version, do: "1.1"
+  # defp soap_version(opts) when is_list(opts), do: Keyword.get(opts, :soap_version, soap_version())
 
   def new(wsdl_path, module_prefix, options \\ []) do
     str = File.read!(wsdl_path)
@@ -143,15 +143,6 @@ defmodule Mix.Noap.GenCode.WSDLWrap do
       end
     )
   end
-
-  defp action_tag_attributes(%Mix.Noap.GenCode.WSDLWrap.SchemaWrap{
-         element_form_default: "qualified",
-         target_namespace: target_namespace
-       }) do
-    %{xmlns: target_namespace}
-  end
-
-  defp action_tag_attributes(_schema), do: %{}
 
   @spec get_endpoint(String.t()) :: String.t()
   defp get_endpoint(doc) do

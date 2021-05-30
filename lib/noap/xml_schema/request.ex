@@ -16,14 +16,13 @@ defmodule Noap.XMLSchema.Request do
   Parsing parameters map and generate body xml by given soap action name and body params(Map).
   Returns xml-like string.
   """
-  @spec build_request_xml(
-          model :: map(),
+  @spec build_soap_request(
           operation :: Noap.WSDL.Operation.t(),
-          headers :: map(),
-          type_map :: map()
+          request_xml_schema :: Noap.XMLSchema.t(),
+          headers :: map()
         ) :: String.t() | no_return()
-  def build_request_xml(model, operation, headers, type_map) do
-    body = build_soap_body(operation, model, type_map)
+  def build_soap_request(operation, request_xml_schema, headers) do
+    body = build_soap_body(operation, request_xml_schema)
     header = build_soap_header(operation, headers)
 
     [header, body]
@@ -33,9 +32,9 @@ defmodule Noap.XMLSchema.Request do
     |> String.replace(["\n", "\t"], "")
   end
 
-  def build_soap_body(operation, model, type_map) do
-    model
-    |> to_element_tuples(type_map, "m")
+  def build_soap_body(operation, request_xml_schema) do
+    request_xml_schema
+    |> to_element_tuples(operation.type_map, "m")
     |> add_action_tag_wrapper(operation)
     |> add_body_tag_wrapper(operation.input_schema.wsdl)
   end
@@ -116,15 +115,20 @@ defmodule Noap.XMLSchema.Request do
     %{"xmlns:#{wsdl.soap_namespace}" => @soap_version_namespaces[wsdl.soap_version]}
   end
 
-  defp to_element_tuples(model, type_map, env) do
-    to_element_tuples(model, type_map, env, model.__struct__.xml_fields())
+  defp to_element_tuples(request_xml_schema, type_map, env) do
+    to_element_tuples(
+      request_xml_schema,
+      type_map,
+      env,
+      request_xml_schema.__struct__.xml_fields()
+    )
   end
 
-  defp to_element_tuples(model, type_map, env, xml_fields) do
+  defp to_element_tuples(request_xml_schema, type_map, env, xml_fields) do
     Enum.map(
       xml_fields,
       fn xml_field ->
-        value = Map.get(model, xml_field.name)
+        value = Map.get(request_xml_schema, xml_field.name)
         element_value = to_element_value(xml_field, type_map, env, value)
 
         # Prepend a tuple which represent an element for xml_builder where 1=name 2=map of attributes (nil for us) 3=value
@@ -138,9 +142,9 @@ defmodule Noap.XMLSchema.Request do
     module.to_str(value, xml_field.opts)
   end
 
-  defp to_element_value(xml_field, type_map, env, model) do
-    model = model || struct(xml_field.type)
-    to_element_tuples(model, type_map, env)
+  defp to_element_value(xml_field, type_map, env, request_xml_schema) do
+    request_xml_schema = request_xml_schema || struct(xml_field.type)
+    to_element_tuples(request_xml_schema, type_map, env)
   end
 
   def soap_version(wsdl) do

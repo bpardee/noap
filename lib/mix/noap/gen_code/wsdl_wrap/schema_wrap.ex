@@ -21,11 +21,6 @@ defmodule Mix.Noap.GenCode.WSDLWrap.SchemaWrap do
     "string" => :string
   }
 
-  @soap_version_namespaces %{
-    "1.1" => "http://schemas.xmlsoap.org/wsdl/soap/",
-    "1.2" => "http://schemas.xmlsoap.org/wsdl/soap12/"
-  }
-
   alias Mix.Noap.GenCode.WSDLWrap
   alias Mix.Noap.GenCode.WSDLWrap.{Action, ComplexType, Field, Options, Util}
   import SweetXml, only: [xpath: 2, xpath: 3, sigil_x: 2]

@@ -24,14 +24,14 @@ defmodule Noap.Type do
     string: __MODULE__.String
   }
 
-  def default_type_map() do
+  def default_type_map do
     @default_type_map
   end
 
   def type_map(application) do
     application
     |> Application.get_env(:noap_types, [])
-    |> Enum.into(@default_type_map())
+    |> Enum.into(@default_type_map)
   end
 
   defmacro __using__([]) do
