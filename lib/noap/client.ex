@@ -3,15 +3,16 @@ defmodule Noap.Client do
   import SweetXml, only: [xpath: 2, sigil_x: 2]
   import Noap.XMLUtil, only: [add_soap_namespace: 2]
 
-  @spec perform_operation(Noap.WSDL.Operation.t(), Noap.XMLSchema.t(), Keyword.t()) ::
-          Noap.perform_operation_t()
-  def perform_operation(operation = %Noap.WSDL.Operation{}, request_xml_schema, options \\ []) do
+  @spec call_operation(Noap.WSDL.Operation.t(), Noap.XMLSchema.t(), Keyword.t()) ::
+          Noap.call_operation_t()
+  def call_operation(operation = %Noap.WSDL.Operation{}, request_xml_schema, options \\ []) do
     http = http()
     endpoint = endpoint(operation, options[:endpoint])
     # TODO: Operation should hold the action
     headers = [{"SOAPAction", ""}, {"Content-Type", "text/xml;charset=utf-8"}]
 
     soap_request = Noap.XMLSchema.Request.build_soap_request(operation, request_xml_schema, [])
+    Logger.debug("SOAP request = #{soap_request}")
 
     http.post(endpoint, headers, soap_request, options)
     |> parse(operation)
@@ -38,12 +39,14 @@ defmodule Noap.Client do
   end
 
   defp parse({:ok, status_code, soap_response}, operation) do
+    Logger.debug("SOAP respone = #{soap_response}")
     response_xml_schema = Noap.XMLSchema.Response.parse_soap_response(soap_response, operation)
 
     {:ok, status_code, response_xml_schema}
   end
 
   defp parse({:error, error}, _operation) do
+    Logger.error("SOAP call error: #{error}")
     {:error, 500, error}
   end
 

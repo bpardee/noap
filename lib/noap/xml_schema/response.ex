@@ -19,7 +19,7 @@ defmodule Noap.XMLSchema.Response do
 
     body_node
     |> xpath(
-      ~x"#{operation.output_name}"e
+      ~x"body:#{operation.output_name}"e
       |> add_namespace("body", operation.output_schema.target_namespace)
     )
     |> parse_xml_schema(
@@ -31,10 +31,13 @@ defmodule Noap.XMLSchema.Response do
 
   # @spec parse_record(tuple()) :: map() | String.t()
   defp parse_xml_schema(node, body_namespace, module, type_map) do
+    Logger.debug("Parsing xml_schema=#{module}")
+
     module.xml_fields
     |> Enum.reduce(
       module.__struct__,
       fn xml_field, model ->
+        Logger.debug("Parsing xml_field=#{inspect(xml_field)}")
         value = parse_field(node, body_namespace, xml_field, type_map)
         Map.put(model, xml_field.name, value)
       end
@@ -48,6 +51,7 @@ defmodule Noap.XMLSchema.Response do
       fn {k, v}, value_map ->
         case k do
           name when is_atom(name) ->
+            Logger.debug("Parsing name(atom)=#{name}")
             type = embed_type.type(name)
 
             value =
@@ -78,6 +82,7 @@ defmodule Noap.XMLSchema.Response do
             Map.put(value_map, name, value)
 
           parent_xml_node when is_binary(parent_xml_node) ->
+            Logger.debug("Parsing node(string)=#{parent_xml_node}")
             sub_xml_map = v
             child_node = body_xpath(node, body_namespace, ~x"body:#{parent_xml_node}"e)
 
@@ -112,6 +117,7 @@ defmodule Noap.XMLSchema.Response do
          xml_field = %XMLField{xml_name: nil},
          type_map
        ) do
+    Logger.debug("parse_field of node #{inspect(node)} xml_field #{inspect(xml_field)}")
     embed_type = type_map[xml_field.type]
     xml_map = xml_field.xml_map
     value_map = parse_xml_map(%{}, node, body_namespace, embed_type, xml_map, xml_field, type_map)
@@ -141,6 +147,8 @@ defmodule Noap.XMLSchema.Response do
   end
 
   defp get_field_value(node, body_namespace, xml_name, type, opts, type_map) do
+    Logger.debug("get_field_value of node #{inspect(node)}")
+
     body_xpath(node, body_namespace, ~x"body:#{xml_name}/text()"s)
     |> String.trim()
     |> Noap.Util.nil_if_empty()

@@ -20,17 +20,12 @@ defmodule Mix.Tasks.Noap.Gen.Code do
 
   ## Examples
 
-      mix ecto.gen.repo -r Custom.Repo
-
-  This generator will automatically open the config/config.exs
-  after generation if you have `ECTO_EDITOR` set in your environment
-  variable.
+      mix noap.gen.code TBD
 
   ## Command line options
 
-    * `-s`, `--schema_module` - the repo to generate
-    * `-o`, `--overrides_filee` - yml file that contains type overrides, etc to override
-         default parsing behaviour
+    * `-s`, `--schema_module` - name of the schema module that will override the one automatically used based on the namespace url
+    * `-o`, `--overrides_file` - yml file that contains type overrides, etc to override default parsing behaviour
 
   """
 
@@ -60,7 +55,6 @@ defmodule Mix.Tasks.Noap.Gen.Code do
         """)
 
       {_opts, _args} ->
-        IO.inspect(_args)
         Mix.shell().info("wsdl_path and parent_module must be specified")
     end
   end

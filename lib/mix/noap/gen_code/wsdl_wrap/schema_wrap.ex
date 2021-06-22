@@ -1,4 +1,6 @@
 defmodule Mix.Noap.GenCode.WSDLWrap.SchemaWrap do
+  require Logger
+
   defstruct [
     :schema_ns,
     :target_namespace,
@@ -9,7 +11,7 @@ defmodule Mix.Noap.GenCode.WSDLWrap.SchemaWrap do
     :complex_type_map
   ]
 
-  @type_to_ecto_map %{
+  @type_to_simple_map %{
     "boolean" => :boolean,
     "date" => :date,
     "dateTime" => :datetime,
@@ -107,7 +109,7 @@ defmodule Mix.Noap.GenCode.WSDLWrap.SchemaWrap do
   end
 
   defp parse_complex_type(schema, name, elements, parent_complex_type) do
-    # IO.puts("Creating complex type name=#{name}")
+    Logger.debug("Creating complex type name=#{name}")
 
     Enum.reduce(
       elements,
@@ -131,56 +133,42 @@ defmodule Mix.Noap.GenCode.WSDLWrap.SchemaWrap do
     case element |> xpath(~x"@type"s) do
       "" ->
         field_type = parse_type(schema, element, parent_complex_type)
-        max_occurs = element |> xpath(~x"@maxOccurs"s)
 
         embeds =
           cond do
             is_atom(field_type) -> :field
-            max_occurs == "" || String.to_integer(max_occurs) <= 1 -> :embeds_one
-            true -> :embeds_many
+            true -> xpath(element, ~x"@maxOccurs"s) |> Util.max_occurs_embed()
           end
 
         Field.new(embeds, xml_name, field_type)
 
       xml_type ->
-        get_simple_field(schema, xml_name, xml_type)
+        {field_or_embeds, type} = convert_type(schema, element, xml_type)
+        Field.new(field_or_embeds, xml_name, type)
     end
   end
 
-  defp get_simple_field(schema, xml_name, xml_type) do
-    type = convert_type(schema, xml_type)
-    Field.new(:field, xml_name, type)
-  end
-
-  defp convert_type(schema, xml_type) do
+  defp convert_type(schema, element, xml_type) do
     case String.split(xml_type, ":", parts: 2) do
       [simple_type] ->
-        ecto_type = @type_to_ecto_map[simple_type]
+        type = @type_to_simple_map[simple_type]
 
-        if is_nil(ecto_type) do
+        if is_nil(type) do
           raise("Not sure how to handle type=#{xml_type}")
         end
 
-        ecto_type
+        {:field, type}
 
       [namespace, name] ->
         cond do
           namespace == schema.schema_ns ->
-            convert_type(schema, name)
-
-          # namespace == schema.target_ns ->
-
-          (type = find_complex_type(schema, name)) != nil ->
-            type
+            convert_type(schema, element, name)
 
           true ->
-            raise("Not sure how to handle namespace=#{namespace} type=#{name}")
+            embeds = xpath(element, ~x"@maxOccurs"s) |> Util.max_occurs_embed()
+            {embeds, name}
         end
     end
-  end
-
-  defp find_complex_type(schema, name) do
-    schema.complex_type_map[name]
   end
 
   defp parse_type(schema, parent_element, parent_complex_type) do
@@ -188,7 +176,8 @@ defmodule Mix.Noap.GenCode.WSDLWrap.SchemaWrap do
 
     cond do
       (type = parent_element |> xpath(~x"@type"s)) != "" ->
-        convert_type(schema, type)
+        {_field_or_embeds, ctype} = convert_type(schema, parent_element, type)
+        ctype
 
       (complex_elements = get_complex_type_elements(parent_element)) != [] ->
         parse_complex_type(schema, name, complex_elements, parent_complex_type)
@@ -203,10 +192,12 @@ defmodule Mix.Noap.GenCode.WSDLWrap.SchemaWrap do
           )
         end
 
-        convert_type(schema, type)
+        {_field_or_embeds, ctype} = convert_type(schema, parent_element, type)
+        ctype
 
       true ->
-        raise("Not sure how to handle name=#{name} #{inspect(parent_element)}")
+        # Empty field list is the only other possibility?
+        parse_complex_type(schema, name, [], parent_complex_type)
     end
   end
 
