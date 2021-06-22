@@ -1,17 +1,9 @@
 <%= if !only_simple_fields?(wrap.input_complex_type) || field_count(wrap.input_complex_type) > 2 do %>
-@spec call_<%= wrap.underscored_name %>(<%= module_name(wrap.input_complex_type) %>.t(), Keyword.t()) ::
-        {:ok, Noap.status_code(), <%= module_name(wrap.output_complex_type) %>.t()}
-        | Noap.error_status()
-        | no_return()
 @doc "Calls the <%= wrap.name %> operation"
 defdelegate call_<%= wrap.underscored_name %>(<%= Util.underscore(wrap.input_complex_type.name) %>, options \\ []), to: Operations
 <% end %>
 
 <%= if only_simple_fields?(wrap.input_complex_type) do %>
-@spec call_<%= wrap.underscored_name %>(<%= module_name(wrap.input_complex_type) %>.t(), Keyword.t()) ::
-        {:ok, Noap.status_code(), <%= module_name(wrap.output_complex_type) %>.t()}
-        | Noap.error_status()
-        | no_return()
 @doc "Calls the <%= wrap.name %> operation"
 defdelegate call_<%= wrap.underscored_name %>(<%= field_names_as_args(wrap.input_complex_type) %> options \\ []), to: Operations
 <% end %>
