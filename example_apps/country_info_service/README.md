@@ -1,21 +1,29 @@
 # CountryInfoService
 
-**TODO: Add description**
+Example Noap client for CountryInfoService
 
-## Installation
+## Usage
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `country_info_service` to your list of dependencies in `mix.exs`:
-
-```elixir
-def deps do
-  [
-    {:country_info_service, "~> 0.1.0"}
-  ]
-end
+Get dependencies and generate parsing code:
+```
+mix deps.get
+mix noap.gen.code
 ```
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/country_info_service](https://hexdocs.pm/country_info_service).
-
+Make calls: 
+```elixir
+iex(1)> {:ok, status_code, list_of_countries} = CountryInfoService.call_list_of_country_names_by_name()
+iex(2)> list_of_countries
+%CountryInfoService.Oorsprong.ListOfCountryNamesByNameResponse{
+  list_of_country_names_by_name_result: %CountryInfoService.Oorsprong.ArrayOftCountryCodeAndName{
+    t_country_code_and_name: [
+      %CountryInfoService.Oorsprong.TCountryCodeAndName{
+        s_iso_code: "AX",
+        s_name: "Åland Islands"
+      },
+      %CountryInfoService.Oorsprong.TCountryCodeAndName{
+        s_iso_code: "AF",
+        s_name: "Afghanistan"
+      },
+...
+```

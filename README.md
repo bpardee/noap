@@ -18,7 +18,7 @@ end
 
 ## Usage
 
-See [CountryInfoService](example_apps/README.md) example
+See [CountryInfoService](example_apps/country_info_service) example
 
 Add the HTTP implementation to your config:
 ```
