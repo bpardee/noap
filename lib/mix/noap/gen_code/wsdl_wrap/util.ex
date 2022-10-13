@@ -64,6 +64,11 @@ defmodule Mix.Noap.GenCode.WSDLWrap.Util do
     |> Enum.join("\n")
   end
 
+  def module_to_string(module) do
+    # Remove "Elixir."
+    to_string(module) |> String.slice(7..-1)
+  end
+
   defp remove_common_host_front([prefix | rest]) when prefix in ~w[www], do: rest
   defp remove_common_host_front(host), do: host
 
