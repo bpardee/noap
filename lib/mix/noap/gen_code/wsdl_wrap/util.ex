@@ -75,6 +75,10 @@ defmodule Mix.Noap.GenCode.WSDLWrap.Util do
 
   def max_occurs_embed(str) do
     if max_occurs_singular?(str), do: :embeds_one, else: :embeds_many
+
+  def module_to_string(module) do
+    # Remove "Elixir."
+    to_string(module) |> String.slice(7..-1)
   end
 
   defp remove_common_host_front([prefix | rest]) when prefix in ~w[www], do: rest

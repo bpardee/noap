@@ -26,6 +26,7 @@ defmodule Noap.MixProject do
     [
       {:bypass, "~> 2.1", optional: true},
       {:mojito, "~> 0.7", optional: true},
+      {:finch, "~> 0.13", optional: true},
       {:credo, "~> 1.0", only: [:dev, :test]},
       {:ex_doc, "~>  0.19.3", only: [:dev, :docs], runtime: false},
       {:sweet_xml, "~> 0.6.6"},

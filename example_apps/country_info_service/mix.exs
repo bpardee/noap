@@ -12,18 +12,17 @@ defmodule CountryInfoService.MixProject do
     ]
   end
 
-  # Run "mix help compile.app" to learn about applications.
   def application do
     [
+      mod: {CountryInfoService.Application, []},
       extra_applications: [:logger]
     ]
   end
 
-  # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
       {:noap, path: "../.."},
-      {:mojito, "~> 0.7"}
+      {:finch, "~> 0.13"}
     ]
   end
 end

@@ -10,9 +10,9 @@ mix deps.get
 mix noap.gen.code
 ```
 
-Make calls: 
+Make calls:
 ```elixir
-iex(1)> {:ok, status_code, list_of_countries} = CountryInfoService.call_list_of_country_names_by_name()
+iex(1)> {:ok, 200, list_of_countries} = CountryInfoService.call_list_of_country_names_by_name()
 iex(2)> list_of_countries
 %CountryInfoService.Oorsprong.ListOfCountryNamesByNameResponse{
   list_of_country_names_by_name_result: %CountryInfoService.Oorsprong.ArrayOftCountryCodeAndName{

@@ -10,8 +10,8 @@ Soap client for Elixir
 def deps do
   [
     {:noap, "~> 0.1.0"},
-    # mojito is optional, otherwise create a module similar to Noap.HTTP.Mojito
-    {:mojito, "~> 0.7"}
+    # finch is optional, otherwise create a module similar to Noap.HTTP.Finch
+    {:finch, "~> 0.13"}
   ]
 end
 ```
@@ -22,7 +22,7 @@ See [CountryInfoService](example_apps/country_info_service) example
 
 Add the HTTP implementation to your config:
 ```
-config :noap, :http, Noap.HTTP.Mojito
+config :noap, :http, Noap.HTTP.Finch
 ```
 
 Generate code based on the wsdl:
