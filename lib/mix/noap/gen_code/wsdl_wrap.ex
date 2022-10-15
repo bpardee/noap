@@ -22,7 +22,7 @@ defmodule Mix.Noap.GenCode.WSDLWrap do
       add_soap_namespace: 2
     ]
 
-  alias __MODULE__.{ComplexType, Field, OperationWrap, SchemaWrap, Util}
+  alias __MODULE__.{OperationWrap, Util}
 
   # defp soap_version, do: Application.fetch_env!(:soap, :globals)[:version]
   # defp soap_version, do: "1.1"
@@ -122,16 +122,32 @@ defmodule Mix.Noap.GenCode.WSDLWrap do
   end
 
   defp get_operations(doc, schema_map, message_map, _opts) do
-    doc
+    port_type_node = xpath(doc, ~x"wsdl:portType" |> add_protocol_namespace("wsdl"))
+    port_type_name = xpath(port_type_node, ~x"@name"s)
+
+    binding_node =
+      xpath(doc, ~x"wsdl:binding[@name='#{port_type_name}']"e |> add_protocol_namespace("wsdl"))
+
+    port_type_node
     |> xpath(
-      ~x"wsdl:portType/wsdl:operation"l
+      ~x"wsdl:operation"l
       |> add_protocol_namespace("wsdl")
     )
-    |> Enum.map(&build_operation(&1, schema_map, message_map))
+    |> Enum.map(&build_operation(binding_node, &1, schema_map, message_map))
   end
 
-  defp build_operation(op_node, schema_map, message_map) do
+  defp build_operation(binding_node, op_node, schema_map, message_map) do
     name = xpath(op_node, ~x"./@name"s)
+
+    soap_action =
+      xpath(
+        binding_node,
+        ~x"wsdl:operation[@name='#{name}']/soap:operation/@soapAction"s
+        |> add_protocol_namespace("wsdl")
+        |> add_soap_namespace("soap")
+      )
+      |> IO.inspect(label: :soap_action)
+
     input_message_name = get_operation_arg_name(op_node, ~x"./wsdl:input/@message"s)
     output_message_name = get_operation_arg_name(op_node, ~x"./wsdl:output/@message"s)
     input_name = message_map[input_message_name][:name]
@@ -161,12 +177,13 @@ defmodule Mix.Noap.GenCode.WSDLWrap do
       output_name: output_name,
       output_schema: output_schema,
       output_complex_type: output_complex_type,
-      soap_action: nil,
+      soap_action: soap_action,
       input_header_message: input_header[:message],
       input_header_part: input_header[:part],
       action_attribute: action.attribute,
       action_tag: action.tag
     }
+
     # |> IO.inspect()
   end
 

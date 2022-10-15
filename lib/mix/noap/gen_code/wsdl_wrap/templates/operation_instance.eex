@@ -1,5 +1,6 @@
 @<%= wrap.underscored_name %> %Noap.WSDL.Operation{
   name: "<%= wrap.name %>",
+  soap_action: <%= inspect(wrap.soap_action) %>,
   input_name: "<%= wrap.input_name %>",
   input_schema: @schema_<%= wrap.input_schema.target_ns %>,
   input_module: <%= module_name(wrap.input_complex_type) %>,

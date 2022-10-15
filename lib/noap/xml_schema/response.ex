@@ -1,6 +1,6 @@
 defmodule Noap.XMLSchema.Response do
   @moduledoc """
-  Provides a functions for parse an xml-like response body.
+  Provides functions for parsing a soap response body.
   """
 
   require Logger

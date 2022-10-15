@@ -8,8 +8,7 @@ defmodule Noap.Client do
   def call_operation(operation = %Noap.WSDL.Operation{}, request_xml_schema, options \\ []) do
     http = http()
     endpoint = endpoint(operation, options[:endpoint])
-    # TODO: Operation should hold the action
-    headers = [{"SOAPAction", ""}, {"Content-Type", "text/xml;charset=utf-8"}]
+    headers = [{"SOAPAction", operation.soap_action}, {"Content-Type", "text/xml;charset=utf-8"}]
 
     soap_request = Noap.XMLSchema.Request.build_soap_request(operation, request_xml_schema, [])
     Logger.debug("SOAP request = #{soap_request}")

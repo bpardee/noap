@@ -3,7 +3,8 @@ defmodule Mix.Noap.GenCode.WSDLWrap.CreateCode do
   alias Mix.Noap.GenCode.WSDLWrap.{ComplexType, Field, Options, Template, Util}
 
   def create_code(wsdl_wrap = %WSDLWrap{}, type_map, options \\ []) do
-    lib_dir = Keyword.get(options, :lib_dir, "lib")
+    # lib_dir = Keyword.get(options, :lib_dir, "lib")
+    lib_dir = "lib"
     overrides = Options.overrides(options)
 
     wsdl_wrap.schema_map
@@ -64,17 +65,6 @@ defmodule Mix.Noap.GenCode.WSDLWrap.CreateCode do
       operation_delegates
     )
     |> Template.save!("#{module_dir}.ex")
-  end
-
-
-  if Code.ensure_loaded?(YamlElixir) do
-    defp yaml_read!(yaml_file) do
-      YamlElixir.read_from_file!(yaml_file, atoms: true)
-    end
-  else
-    defp yaml_read!(_yaml_file) do
-      raise "You must add yaml_elixir to your mix.exs dependencies"
-    end
   end
 
   defp process_complex_type_overrides(complex_type, complex_type_map, type_map, overrides) do

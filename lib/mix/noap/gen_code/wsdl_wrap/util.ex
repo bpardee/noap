@@ -75,6 +75,7 @@ defmodule Mix.Noap.GenCode.WSDLWrap.Util do
 
   def max_occurs_embed(str) do
     if max_occurs_singular?(str), do: :embeds_one, else: :embeds_many
+  end
 
   def module_to_string(module) do
     # Remove "Elixir."

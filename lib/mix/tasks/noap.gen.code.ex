@@ -49,7 +49,7 @@ defmodule Mix.Tasks.Noap.Gen.Code do
 
     wsdl_wrap = Mix.Noap.GenCode.WSDLWrap.new(wsdl_path, soap_module, opts)
     if yaml_file = mix_opts[:yaml_file] do
-      Mix.Noap.GenCode.WSDLWrap.yamlize(wsdl_wrap, yaml_file)
+      Mix.Noap.GenCode.WSDLWrap.YAML.yamlize(wsdl_wrap, yaml_file)
     else
       Mix.Noap.GenCode.WSDLWrap.CreateCode.create_code(wsdl_wrap, type_map, opts)
     end
