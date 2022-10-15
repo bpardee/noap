@@ -29,6 +29,7 @@ defmodule Mix.Noap.GenCode.WSDLWrap do
   # defp soap_version(opts) when is_list(opts), do: Keyword.get(opts, :soap_version, soap_version())
 
   def new(wsdl_path, module_prefix, options \\ []) do
+    module_prefix = Util.module_to_string(module_prefix)
     str = File.read!(wsdl_path)
     doc = parse(str, namespace_conformant: true)
     schema_ns = Noap.XMLUtil.find_namespace(doc, "http://www.w3.org/2001/XMLSchema")
@@ -200,7 +201,7 @@ defmodule Mix.Noap.GenCode.WSDLWrap do
       action_attribute: action.attribute,
       action_tag: action.tag
     }
-    |> IO.inspect()
+    # |> IO.inspect()
   end
 
   defp get_operation_arg_name(op_node, path) do

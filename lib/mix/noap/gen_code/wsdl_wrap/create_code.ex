@@ -1,9 +1,9 @@
 defmodule Mix.Noap.GenCode.WSDLWrap.CreateCode do
   alias Mix.Noap.GenCode.WSDLWrap
-  alias Mix.Noap.GenCode.WSDLWrap.{ComplexType, Field, Template, Util}
+  alias Mix.Noap.GenCode.WSDLWrap.{ComplexType, Field, Options, Template, Util}
 
   def create_code(wsdl_wrap = %WSDLWrap{}, type_map, options \\ []) do
-    overrides = get_create_code_overrides(options)
+    overrides = Options.overrides(options)
 
     wsdl_wrap.schema_map
     |> Enum.each(fn {name, schema_wrap} ->
@@ -46,14 +46,6 @@ defmodule Mix.Noap.GenCode.WSDLWrap.CreateCode do
       operation_functions
     )
     |> Template.save!(module_dir, "operations")
-  end
-
-  defp get_create_code_overrides(options) do
-    if yaml_file = options[:overrides_file] do
-      YamlElixir.read_from_file!(yaml_file, atoms: true)
-    else
-      options[:overrides] || %{}
-    end
   end
 
   defp process_complex_type_overrides(complex_type, type_map, overrides) do
