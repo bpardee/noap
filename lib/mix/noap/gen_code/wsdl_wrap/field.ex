@@ -9,15 +9,9 @@ defmodule Mix.Noap.GenCode.WSDLWrap.Field do
     do_new(field_or_embeds, xml_name, Util.underscore(xml_name), simple_type)
   end
 
-  def new(embeds, xml_name, complex_type_name) when is_binary(complex_type_name) do
-    Logger.debug("#{xml_name} of type #{complex_type_name}")
-
-    do_new(
-      embeds,
-      xml_name,
-      Util.underscore(xml_name),
-      complex_type_name
-    )
+  def new(embeds, xml_name, complex_type = %ComplexType{}) do
+    Logger.debug("#{xml_name} of type #{Template.module_name(complex_type)}")
+    do_new(embeds, xml_name, Util.underscore(xml_name), complex_type)
   end
 
   def new_override(embeds, name, embed_type, options) do

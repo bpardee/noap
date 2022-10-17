@@ -92,9 +92,17 @@ defmodule Mix.Noap.GenCode.WSDLWrap.SchemaWrap do
     complex_type_map =
       top_type_elements
       |> Enum.map(&parse_type(schema, &1, nil))
-      |> Enum.into(complex_type_map, &{&1.name, &1})
+      |> Enum.reduce(complex_type_map, &add_to_complex_type_map/2)
 
     %{schema | complex_type_map: complex_type_map}
+  end
+
+  defp add_to_complex_type_map(complex_type = %ComplexType{}, map) do
+    Map.put(map, complex_type.name, complex_type)
+  end
+
+  defp add_to_complex_type_map(complex_type_name, map) when is_binary(complex_type_name) do
+    map
   end
 
   defp parse_complex_type(schema, parent_element, parent_complex_type) do

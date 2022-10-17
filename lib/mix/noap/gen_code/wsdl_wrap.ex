@@ -138,16 +138,7 @@ defmodule Mix.Noap.GenCode.WSDLWrap do
 
   defp build_operation(binding_node, op_node, schema_map, message_map) do
     name = xpath(op_node, ~x"./@name"s)
-
-    soap_action =
-      xpath(
-        binding_node,
-        ~x"wsdl:operation[@name='#{name}']/soap:operation/@soapAction"s
-        |> add_protocol_namespace("wsdl")
-        |> add_soap_namespace("soap")
-      )
-      |> IO.inspect(label: :soap_action)
-
+    soap_action = get_soap_action(binding_node, name)
     input_message_name = get_operation_arg_name(op_node, ~x"./wsdl:input/@message"s)
     output_message_name = get_operation_arg_name(op_node, ~x"./wsdl:output/@message"s)
     input_name = message_map[input_message_name][:name]
@@ -158,6 +149,7 @@ defmodule Mix.Noap.GenCode.WSDLWrap do
       find_complex_type(schema_map, message_map, input_message_name)
 
     # IO.puts("Found input type=#{inspect(input_complex_type)}")
+
     {output_schema, output_complex_type} =
       find_complex_type(schema_map, message_map, output_message_name)
 
@@ -185,6 +177,17 @@ defmodule Mix.Noap.GenCode.WSDLWrap do
     }
 
     # |> IO.inspect()
+  end
+
+  defp get_soap_action(nil, _name), do: nil
+
+  defp get_soap_action(binding_node, name) do
+    xpath(
+      binding_node,
+      ~x"wsdl:operation[@name='#{name}']/soap:operation/@soapAction"s
+      |> add_protocol_namespace("wsdl")
+      |> add_soap_namespace("soap")
+    )
   end
 
   defp get_operation_arg_name(op_node, path) do
