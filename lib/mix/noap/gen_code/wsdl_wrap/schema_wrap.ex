@@ -144,8 +144,11 @@ defmodule Mix.Noap.GenCode.WSDLWrap.SchemaWrap do
 
         embeds =
           cond do
-            is_atom(field_type) -> :field
-            true -> xpath(element, ~x"@maxOccurs"s) |> Util.max_occurs_embed()
+            is_atom(field_type) ->
+              :field
+
+            true ->
+              xpath(element, ~x"@maxOccurs"s) |> Util.max_occurs_embed()
           end
 
         Field.new(embeds, xml_name, field_type)

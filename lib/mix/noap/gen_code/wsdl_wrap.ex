@@ -138,7 +138,7 @@ defmodule Mix.Noap.GenCode.WSDLWrap do
 
   defp build_operation(binding_node, op_node, schema_map, message_map) do
     name = xpath(op_node, ~x"./@name"s)
-    soap_action = get_soap_action(binding_node, name)
+    soap_action = get_soap_action(binding_node, name) || ""
     input_message_name = get_operation_arg_name(op_node, ~x"./wsdl:input/@message"s)
     output_message_name = get_operation_arg_name(op_node, ~x"./wsdl:output/@message"s)
     input_name = message_map[input_message_name][:name]
@@ -148,12 +148,9 @@ defmodule Mix.Noap.GenCode.WSDLWrap do
     {input_schema, input_complex_type} =
       find_complex_type(schema_map, message_map, input_message_name)
 
-    # IO.puts("Found input type=#{inspect(input_complex_type)}")
-
     {output_schema, output_complex_type} =
       find_complex_type(schema_map, message_map, output_message_name)
 
-    # IO.puts("Found output type=#{inspect(output_complex_type)}")
     action = input_schema.top_types[name]
 
     if is_nil(action) do
@@ -175,8 +172,6 @@ defmodule Mix.Noap.GenCode.WSDLWrap do
       action_attribute: action.attribute,
       action_tag: action.tag
     }
-
-    # |> IO.inspect()
   end
 
   defp get_soap_action(nil, _name), do: nil

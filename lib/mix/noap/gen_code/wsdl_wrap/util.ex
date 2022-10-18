@@ -68,8 +68,8 @@ defmodule Mix.Noap.GenCode.WSDLWrap.Util do
 
   def max_occurs_singular?(str) do
     case Integer.parse(str) do
-      {max_occurs, ""} -> max_occurs > 1
-      error -> raise "Not sure how to handle non-integer maxOccurs value=#{str}"
+      {max_occurs, ""} -> max_occurs == 1
+      _error -> raise "Not sure how to handle non-integer maxOccurs value=#{str}"
     end
   end
 

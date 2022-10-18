@@ -183,6 +183,18 @@ defmodule Mix.Noap.GenCode.WSDLWrap.CreateCode do
     %{field | type: child_complex_type}
   end
 
+  defp convert_field(
+         field = %Field{type: child_complex_type = %ComplexType{}},
+         complex_type_map,
+         type_map,
+         overrides
+       ) do
+    child_complex_type =
+      process_complex_type_overrides(child_complex_type, complex_type_map, type_map, overrides)
+
+    %{field | type: child_complex_type}
+  end
+
   defp convert_field(field, _complex_type_map, _type_map, overrides) do
     convert_field_type(field, overrides[:type])
   end
