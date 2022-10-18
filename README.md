@@ -2,6 +2,8 @@
 
 Soap client for Elixir
 
+*When you're asked to do a SOAP client, just say NOAP*
+
 ## Installation
 
 
