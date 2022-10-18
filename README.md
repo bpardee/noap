@@ -20,23 +20,20 @@ end
 
 See [CountryInfoService](example_apps/country_info_service) example
 
-Add the HTTP implementation to your config:
+Add the HTTP implementation and code gen arguments to your config:
 ```
 config :noap, :http, Noap.HTTP.Finch
+
+config :noap, :gen_code,
+  country_info_service: %{
+    wsdl: "config/CountryInfoService.wsdl",
+    soap_module: CountryInfoService,
+    # This line doesn't actually do anything yet.  You must configure Finch using MyFinch
+    finch_module: MyFinch
+  }
 ```
 
 Generate code based on the wsdl:
-```
-mix noap.gen.code config/CountryInfoService.wsdl CountryInfoService
-```
-
-Or optionally you can add the arguments to your config:
-```
-config :noap, :gen_code,
-  country_info_service: ~w[config/CountryInfoService.wsdl CountryInfoService]
-```
-
-And then generate the code without the arguments:
 ```
 mix noap.gen.code
 ```
