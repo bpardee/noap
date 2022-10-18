@@ -1,15 +1,12 @@
 defmodule Mix.Noap.GenCode.WSDLWrap.Util do
   @common_domains ~w[com org biz mil edu gov net int]
-  def get_module_dir(module) do
-    dir =
-      [
-        "lib"
-        | module
-          |> String.split(".")
-          |> Enum.map(&underscore/1)
-      ]
-      |> Path.join()
+  def get_module_dir(lib_dir, module) do
+    path_list =
+      module
+      |> String.split(".")
+      |> Enum.map(&underscore/1)
 
+    dir = Path.join([lib_dir | path_list])
     File.mkdir_p!(dir)
     dir
   end
@@ -54,14 +51,30 @@ defmodule Mix.Noap.GenCode.WSDLWrap.Util do
 
   def to_yaml(map, indentation \\ "") do
     map
-    |> Enum.map(fn {key, value} ->
-      case value do
+    |> Map.keys()
+    |> Enum.sort()
+    |> Enum.map(fn key ->
+      case map[key] do
         map when map == %{} -> "#{indentation}#{key}:"
         map when is_map(map) -> "#{indentation}#{key}:\n#{to_yaml(map, "#{indentation}  ")}"
         value -> "#{indentation}#{key}: #{value}"
       end
     end)
     |> Enum.join("\n")
+  end
+
+  def max_occurs_singular?(""), do: true
+  def max_occurs_singular?("unbounded"), do: false
+
+  def max_occurs_singular?(str) do
+    case Integer.parse(str) do
+      {max_occurs, ""} -> max_occurs == 1
+      _error -> raise "Not sure how to handle non-integer maxOccurs value=#{str}"
+    end
+  end
+
+  def max_occurs_embed(str) do
+    if max_occurs_singular?(str), do: :embeds_one, else: :embeds_many
   end
 
   def module_to_string(module) do

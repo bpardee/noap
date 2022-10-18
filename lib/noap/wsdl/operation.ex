@@ -10,7 +10,7 @@ defmodule Noap.WSDL.Operation do
     :action_attribute,
     :action_tag,
     {:body_namespace, :m},
-    # :soap_action,
+    :soap_action,
     # :action_ns,
     # :action_tag_attributes,
     :application,

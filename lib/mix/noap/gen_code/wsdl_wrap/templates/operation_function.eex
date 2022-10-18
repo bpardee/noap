@@ -1,3 +1,19 @@
+@spec <%= wrap.underscored_name %> :: Noap.WSDL.Operation.t()
+@doc "Returns information on the <%= wrap.name %> operation"
 def <%= wrap.underscored_name %> do
   @<%= wrap.underscored_name %>
 end
+
+<%= if !only_simple_fields?(wrap.input_complex_type) || field_count(wrap.input_complex_type) > 2 do %>
+@doc "Calls the <%= wrap.name %> operation"
+def call_<%= wrap.underscored_name %>(<%= Util.underscore(wrap.input_complex_type.name) %> = %<%= module_name(wrap.input_complex_type) %>{}, options \\ []) do
+  Noap.call_operation(@<%= wrap.underscored_name %>, <%= Util.underscore(wrap.input_complex_type.name) %>, options)
+end
+<% end %>
+
+<%= if only_simple_fields?(wrap.input_complex_type) do %>
+@doc "Calls the <%= wrap.name %> operation"
+def call_<%= wrap.underscored_name %>(<%= field_names_as_args(wrap.input_complex_type) %> options \\ []) do
+  Noap.call_operation(@<%= wrap.underscored_name %>, %<%= module_name(wrap.input_complex_type) %>{<%= field_names_as_assigns(wrap.input_complex_type) %>}, options)
+end
+<% end %>

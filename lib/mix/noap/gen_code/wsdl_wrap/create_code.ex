@@ -3,6 +3,8 @@ defmodule Mix.Noap.GenCode.WSDLWrap.CreateCode do
   alias Mix.Noap.GenCode.WSDLWrap.{ComplexType, Field, Options, Template, Util}
 
   def create_code(wsdl_wrap = %WSDLWrap{}, type_map, options \\ []) do
+    # lib_dir = Keyword.get(options, :lib_dir, "lib")
+    lib_dir = "lib"
     overrides = Options.overrides(options)
 
     wsdl_wrap.schema_map
@@ -12,9 +14,15 @@ defmodule Mix.Noap.GenCode.WSDLWrap.CreateCode do
       schema_wrap.complex_type_map
       |> Stream.map(fn {name, complex_type} ->
         nested_overrides = get_nested_overrides(schema_overrides, name)
-        process_complex_type_overrides(complex_type, type_map, nested_overrides)
+
+        process_complex_type_overrides(
+          complex_type,
+          schema_wrap.complex_type_map,
+          type_map,
+          nested_overrides
+        )
       end)
-      |> Enum.each(&create_complex_type_code/1)
+      |> Enum.each(&create_complex_type_code(lib_dir, &1))
     end)
 
     wsdl_instance = Template.create_wsdl_instance(wsdl_wrap)
@@ -36,7 +44,12 @@ defmodule Mix.Noap.GenCode.WSDLWrap.CreateCode do
       |> Stream.map(&Template.create_operation_function/1)
       |> Enum.join("\n")
 
-    module_dir = Util.get_module_dir(wsdl_wrap.module_prefix)
+    operation_delegates =
+      wsdl_wrap.operations
+      |> Stream.map(&Template.create_operation_delegate/1)
+      |> Enum.join("\n")
+
+    module_dir = Util.get_module_dir(lib_dir, wsdl_wrap.module_prefix)
 
     Template.create_operations(
       wsdl_wrap,
@@ -46,9 +59,15 @@ defmodule Mix.Noap.GenCode.WSDLWrap.CreateCode do
       operation_functions
     )
     |> Template.save!(module_dir, "operations")
+
+    Template.create_delegate(
+      wsdl_wrap,
+      operation_delegates
+    )
+    |> Template.save!("#{module_dir}.ex")
   end
 
-  defp process_complex_type_overrides(complex_type, type_map, overrides) do
+  defp process_complex_type_overrides(complex_type, complex_type_map, type_map, overrides) do
     {embed_one_fields, embed_one_xml_names} =
       process_embed_overrides(complex_type, type_map, :embeds_one, overrides[:embeds_one])
 
@@ -70,7 +89,12 @@ defmodule Mix.Noap.GenCode.WSDLWrap.CreateCode do
         end
       )
       |> Enum.map(fn field ->
-        convert_field(field, type_map, get_nested_overrides(overrides, field.xml_name))
+        convert_field(
+          field,
+          complex_type_map,
+          type_map,
+          get_nested_overrides(overrides, field.xml_name)
+        )
       end)
 
     %{complex_type | fields: Enum.reverse(embed_many_fields ++ embed_one_fields ++ new_fields)}
@@ -118,9 +142,10 @@ defmodule Mix.Noap.GenCode.WSDLWrap.CreateCode do
   end
 
   defp create_complex_type_code(
+         lib_dir,
          complex_type = %ComplexType{parent_module: parent_module, name: name}
        ) do
-    parent_dir = Util.get_module_dir(parent_module)
+    parent_dir = Util.get_module_dir(lib_dir, parent_module)
 
     Template.create_complex_type(complex_type)
     |> Template.save!(parent_dir, name)
@@ -129,7 +154,7 @@ defmodule Mix.Noap.GenCode.WSDLWrap.CreateCode do
     |> Enum.each(fn field ->
       case field do
         %Field{type: child_complex_type = %ComplexType{}} ->
-          create_complex_type_code(child_complex_type)
+          create_complex_type_code(lib_dir, child_complex_type)
 
         _ ->
           nil
@@ -140,15 +165,37 @@ defmodule Mix.Noap.GenCode.WSDLWrap.CreateCode do
   end
 
   defp convert_field(
-         field = %Field{type: child_complex_type = %ComplexType{}},
+         field = %Field{type: child_complex_type_name},
+         complex_type_map,
          type_map,
          overrides
-       ) do
-    child_complex_type = process_complex_type_overrides(child_complex_type, type_map, overrides)
+       )
+       when is_binary(child_complex_type_name) do
+    child_complex_type = complex_type_map[child_complex_type_name]
+
+    if is_nil(child_complex_type) do
+      raise "Not sure how to decipher complex_type=#{child_complex_type_name}"
+    end
+
+    child_complex_type =
+      process_complex_type_overrides(child_complex_type, complex_type_map, type_map, overrides)
+
     %{field | type: child_complex_type}
   end
 
-  defp convert_field(field, _type_map, overrides) do
+  defp convert_field(
+         field = %Field{type: child_complex_type = %ComplexType{}},
+         complex_type_map,
+         type_map,
+         overrides
+       ) do
+    child_complex_type =
+      process_complex_type_overrides(child_complex_type, complex_type_map, type_map, overrides)
+
+    %{field | type: child_complex_type}
+  end
+
+  defp convert_field(field, _complex_type_map, _type_map, overrides) do
     convert_field_type(field, overrides[:type])
   end
 

@@ -1,0 +1,5 @@
+defmodule <%= wrap.module_prefix %> do
+  alias __MODULE__.Operations
+  
+  <%= operation_delegates %>
+end

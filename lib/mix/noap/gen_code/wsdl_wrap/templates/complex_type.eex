@@ -1,4 +1,4 @@
-defmodule <%= complex_type.parent_module %>.<%= complex_type.name %> do
+defmodule <%= module_name(complex_type) %> do
   use Noap.XMLSchema
 
   xml_schema do

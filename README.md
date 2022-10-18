@@ -1,11 +1,10 @@
 # Noap
 
-**TODO: Add description**
+Soap client for Elixir
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `noap` to your list of dependencies in `mix.exs`:
+
 
 ```elixir
 def deps do
