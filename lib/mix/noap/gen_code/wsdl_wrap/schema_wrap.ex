@@ -94,7 +94,34 @@ defmodule Mix.Noap.GenCode.WSDLWrap.SchemaWrap do
       |> Enum.map(&parse_type(schema, &1, nil))
       |> Enum.reduce(complex_type_map, &add_to_complex_type_map/2)
 
+    complex_type_map =
+      complex_type_map
+      |> Enum.map(fn {name, complex_type} ->
+        {name, convert_name_to_complex_type(complex_type_map, complex_type)}
+      end)
+      |> Enum.into(%{})
+
     %{schema | complex_type_map: complex_type_map}
+  end
+
+  defp convert_name_to_complex_type(complex_type_map, complex_type = %ComplexType{}) do
+    fields =
+      complex_type.fields
+      |> Enum.map(fn field ->
+        %{field | type: convert_name_to_complex_type(complex_type_map, field.type)}
+      end)
+
+    %{complex_type | fields: fields}
+  end
+
+  defp convert_name_to_complex_type(_complex_type_map, simple_type) when is_atom(simple_type) do
+    simple_type
+  end
+
+  defp convert_name_to_complex_type(complex_type_map, complex_type_name)
+       when is_binary(complex_type_name) do
+    complex_type_map[complex_type_name] ||
+      raise "Couldn't find complex type of #{complex_type_name}"
   end
 
   defp add_to_complex_type_map(complex_type = %ComplexType{}, map) do
@@ -102,6 +129,7 @@ defmodule Mix.Noap.GenCode.WSDLWrap.SchemaWrap do
   end
 
   defp add_to_complex_type_map(complex_type_name, map) when is_binary(complex_type_name) do
+    # Should already exist or will be created later
     map
   end
 
