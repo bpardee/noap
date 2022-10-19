@@ -5,7 +5,7 @@ defmodule Mix.Noap.GenCode.WSDLWrap.ComplexType do
     :fields
   ]
 
-  alias Mix.Noap.GenCode.WSDLWrap.Field
+  alias Mix.Noap.GenCode.WSDLWrap.{Field, Util}
 
   def new(parent_module, name, _parent = nil) do
     %__MODULE__{
@@ -16,7 +16,7 @@ defmodule Mix.Noap.GenCode.WSDLWrap.ComplexType do
   end
 
   def new(_parent_module, name, %__MODULE__{parent_module: grand_parent_module, name: parent_name}) do
-    new("#{grand_parent_module}.#{parent_name}", name, nil)
+    new("#{grand_parent_module}.#{Util.titleize(parent_name)}", name, nil)
   end
 
   def add_field(complex_type = %__MODULE__{}, field = %Field{}) do

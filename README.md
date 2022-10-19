@@ -30,7 +30,7 @@ config :noap, :gen_code,
   country_info_service: %{
     wsdl: "config/CountryInfoService.wsdl",
     soap_module: CountryInfoService,
-    # This line doesn't actually do anything yet.  You must configure Finch using MyFinch
+    # This line doesn't actually do anything yet.  You must configure Finch using the name MyFinch
     finch_module: MyFinch
   }
 ```
