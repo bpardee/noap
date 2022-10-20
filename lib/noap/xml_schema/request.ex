@@ -156,14 +156,14 @@ defmodule Noap.XMLSchema.Request do
   end
 
   defp field_to_xml(
-         xml_field = %XMLField{field_or_embeds: :embeds_many},
+         %XMLField{field_or_embeds: :embeds_many},
          type_map,
          env,
          name,
          request_xml_schemas
        ) do
-    (request_xml_schemas || struct(xml_field.type))
-    |> Enum.map(&schema_to_xml(&1, type_map, env))
+    (request_xml_schemas || [])
+    |> Stream.map(&schema_to_xml(&1, type_map, env))
     |> Enum.map(fn schema_value -> {name, nil, schema_value} end)
   end
 
