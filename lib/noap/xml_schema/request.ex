@@ -34,7 +34,7 @@ defmodule Noap.XMLSchema.Request do
 
   def build_soap_body(operation, request_xml_schema) do
     request_xml_schema
-    |> to_element_tuples(operation.type_map, "m")
+    |> schema_to_xml(operation.type_map, "m")
     |> add_action_tag_wrapper(operation)
     |> add_body_tag_wrapper(operation.input_schema.wsdl)
   end
@@ -115,8 +115,8 @@ defmodule Noap.XMLSchema.Request do
     %{"xmlns:#{wsdl.soap_namespace}" => @soap_version_namespaces[wsdl.soap_version]}
   end
 
-  defp to_element_tuples(request_xml_schema, type_map, env) do
-    to_element_tuples(
+  defp schema_to_xml(request_xml_schema, type_map, env) do
+    schema_to_xml(
       request_xml_schema,
       type_map,
       env,
@@ -124,27 +124,47 @@ defmodule Noap.XMLSchema.Request do
     )
   end
 
-  defp to_element_tuples(request_xml_schema, type_map, env, xml_fields) do
+  defp schema_to_xml(request_xml_schema, type_map, env, xml_fields) do
     Enum.map(
       xml_fields,
       fn xml_field ->
+        name = env <> ":" <> xml_field.xml_name
         value = Map.get(request_xml_schema, xml_field.name)
-        element_value = to_element_value(xml_field, type_map, env, value)
-
-        # Prepend a tuple which represent an element for xml_builder where 1=name 2=map of attributes (nil for us) 3=value
-        {"#{env}:#{xml_field.xml_name}", nil, element_value}
+        field_to_xml(xml_field, type_map, env, name, value)
       end
     )
   end
 
-  defp to_element_value(xml_field = %XMLField{field_or_embeds: :field}, type_map, _env, value) do
+  defp field_to_xml(xml_field = %XMLField{field_or_embeds: :field}, type_map, _env, name, value) do
     module = type_map[xml_field.type] || raise("Unknown type: #{xml_field.type}")
-    module.to_str(value, xml_field.opts)
+    str_value = module.to_str(value, xml_field.opts)
+
+    # Prepend a tuple which represent an element for xml_builder where 1=name 2=map of attributes (nil for us) 3=value
+    {name, nil, str_value}
   end
 
-  defp to_element_value(xml_field, type_map, env, request_xml_schema) do
+  defp field_to_xml(
+         xml_field = %XMLField{field_or_embeds: :embeds_one},
+         type_map,
+         env,
+         name,
+         request_xml_schema
+       ) do
     request_xml_schema = request_xml_schema || struct(xml_field.type)
-    to_element_tuples(request_xml_schema, type_map, env)
+    schema_value = schema_to_xml(request_xml_schema, type_map, env)
+    {name, nil, schema_value}
+  end
+
+  defp field_to_xml(
+         xml_field = %XMLField{field_or_embeds: :embeds_many},
+         type_map,
+         env,
+         name,
+         request_xml_schemas
+       ) do
+    (request_xml_schemas || struct(xml_field.type))
+    |> Enum.map(&schema_to_xml(&1, type_map, env))
+    |> Enum.map(fn schema_value -> {name, nil, schema_value} end)
   end
 
   def soap_version(wsdl) do
