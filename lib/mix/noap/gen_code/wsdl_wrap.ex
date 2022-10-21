@@ -126,7 +126,8 @@ defmodule Mix.Noap.GenCode.WSDLWrap do
     port_type_name = xpath(port_type_node, ~x"@name"s)
 
     binding_node =
-      xpath(doc, ~x"wsdl:binding[@name='#{port_type_name}']"e |> add_protocol_namespace("wsdl"))
+      xpath(doc, ~x"wsdl:binding[@name='#{port_type_name}']"e |> add_protocol_namespace("wsdl")) ||
+        xpath(doc, ~x"wsdl:binding"e |> add_protocol_namespace("wsdl"))
 
     port_type_node
     |> xpath(
