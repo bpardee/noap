@@ -57,7 +57,7 @@ defmodule Mix.Tasks.Noap.Gen.Code do
     end
   end
 
-  defp do_run(mix_opts, opts) do
+  defp do_run(_mix_opts, _opts) do
     Mix.shell().info("wsdl_path and soap_module must be specified")
   end
 end
