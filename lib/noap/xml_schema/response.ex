@@ -167,12 +167,12 @@ defmodule Noap.XMLSchema.Response do
   defp verify_ok({:ok, val}, _input_val, _type), do: val
 
   defp verify_ok(:error, input_val, type) do
-    Logger.warn("Unable to parse type=#{type} val=#{input_val}")
+    Logger.warning("Unable to parse type=#{type} val=#{input_val}")
     nil
   end
 
   defp verify_ok({:error, message_or_atom}, input_val, type) do
-    Logger.warn("Unable to parse type=#{type} val=#{input_val}: #{message_or_atom}")
+    Logger.warning("Unable to parse type=#{type} val=#{input_val}: #{message_or_atom}")
     nil
   end
 
