@@ -23,3 +23,8 @@ erl_crash.dump
 
 /.elixir_ls/
 /.vscode/
+*.beam
+**_build
+oorsprong
+
+soap
