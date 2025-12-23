@@ -5,7 +5,7 @@ defmodule Noap.MixProject do
     [
       app: :noap,
       version: "0.1.0",
-      elixir: "~> 1.11",
+      elixir: "~> 1.19",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       package: [
@@ -26,12 +26,14 @@ defmodule Noap.MixProject do
     [
       {:bypass, "~> 2.1", optional: true},
       {:mojito, "~> 0.7", optional: true},
-      {:finch, "~> 0.13", optional: true},
-      {:credo, "~> 1.0", only: [:dev, :test]},
-      {:ex_doc, "~>  0.19.3", only: [:dev, :docs], runtime: false},
-      {:sweet_xml, "~> 0.6.6"},
-      {:xml_builder, "~> 2.1"},
-      {:yaml_elixir, "~> 2.5", optional: true}
+      {:finch, "~> 0.20", optional: true},
+      {:credo, "~> 1.7", only: [:dev, :test]},
+      {:ex_doc, "~> 0.39", only: [:dev, :docs], runtime: false},
+      {:expath, "~> 0.2"},
+      {:meeseeks, "~> 0.18"},
+      {:sweet_xml, "~> 0.7", only: :test},
+      {:xml_builder, "~> 2.4"},
+      {:yaml_elixir, "~> 2.12", optional: true}
     ]
   end
 end

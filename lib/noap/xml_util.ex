@@ -1,5 +1,5 @@
 defmodule Noap.XMLUtil do
-  import SweetXml, only: [xpath: 2, sigil_x: 2, add_namespace: 3]
+  import Noap.SweetXmlCompat, only: [xpath: 2, sigil_x: 2, add_namespace: 3]
 
   @spec find_namespace(String.t(), String.t()) :: String.t()
   def find_namespace(doc, url) do

@@ -4,12 +4,12 @@ defmodule Noap.XMLSchema.Response do
   """
 
   require Logger
-  import SweetXml, only: [xpath: 2, sigil_x: 2, add_namespace: 3]
+  import Noap.SweetXmlCompat, only: [xpath: 2, sigil_x: 2, add_namespace: 3]
   import Noap.XMLUtil, only: [add_soap_namespace: 2]
   alias Noap.XMLField
 
   def parse_soap_response(body, operation) do
-    doc = SweetXml.parse(body, namespace_conformant: true)
+    doc = Noap.SweetXmlCompat.parse(body, namespace_conformant: true)
 
     body_node =
       xpath(
@@ -167,12 +167,12 @@ defmodule Noap.XMLSchema.Response do
   defp verify_ok({:ok, val}, _input_val, _type), do: val
 
   defp verify_ok(:error, input_val, type) do
-    Logger.warn("Unable to parse type=#{type} val=#{input_val}")
+    Logger.warning("Unable to parse type=#{type} val=#{input_val}")
     nil
   end
 
   defp verify_ok({:error, message_or_atom}, input_val, type) do
-    Logger.warn("Unable to parse type=#{type} val=#{input_val}: #{message_or_atom}")
+    Logger.warning("Unable to parse type=#{type} val=#{input_val}: #{message_or_atom}")
     nil
   end
 

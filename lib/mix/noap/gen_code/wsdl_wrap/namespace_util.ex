@@ -1,5 +1,5 @@
 defmodule Mix.Noap.GenCode.WSDLWrap.NamespaceUtil do
-  import SweetXml, only: [add_namespace: 3]
+  import Noap.SweetXmlCompat, only: [add_namespace: 3]
 
   def add_schema_namespace(xpath, prefix) do
     add_namespace(xpath, prefix, "http://www.w3.org/2001/XMLSchema")

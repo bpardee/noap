@@ -1,6 +1,6 @@
 defmodule Noap.Client do
   require Logger
-  import SweetXml, only: [xpath: 2, sigil_x: 2]
+  import Noap.SweetXmlCompat, only: [xpath: 2, sigil_x: 2]
   import Noap.XMLUtil, only: [add_soap_namespace: 2]
 
   @spec call_operation(Noap.WSDL.Operation.t(), Noap.XMLSchema.t(), Keyword.t()) ::
@@ -21,7 +21,7 @@ defmodule Noap.Client do
     Logger.error("Error processing SOAP call status_code: #{status_code}, response: #{inspect(soap_response)}")
 
     error =
-      SweetXml.parse(soap_response, namespace_conformant: true)
+      Noap.SweetXmlCompat.parse(soap_response, namespace_conformant: true)
       |> xpath(
         ~x"soap:Body/soap:Fault/faultstring/text()"s
         |> add_soap_namespace("soap")

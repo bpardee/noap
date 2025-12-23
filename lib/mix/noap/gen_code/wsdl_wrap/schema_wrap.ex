@@ -25,7 +25,7 @@ defmodule Mix.Noap.GenCode.WSDLWrap.SchemaWrap do
 
   alias Mix.Noap.GenCode.WSDLWrap
   alias Mix.Noap.GenCode.WSDLWrap.{Action, ComplexType, Field, Options, Util}
-  import SweetXml, only: [xpath: 2, xpath: 3, sigil_x: 2]
+  import Noap.SweetXmlCompat, only: [xpath: 2, xpath: 3, sigil_x: 2]
 
   import WSDLWrap.NamespaceUtil, only: [add_schema_namespace: 2]
 

@@ -67,10 +67,7 @@ defmodule Noap.XMLSchema.MapUtil do
     if child = Map.get(xml_schema, name) do
       type = get_type(xml_field, type_map)
 
-      child_map =
-        child_to_map_fun.(child, type, type_map, remove_if_nil?, child_to_map_fun, key_field)
-
-      if remove_if_nil? && child_map == %{}, do: nil, else: child_map
+      child_to_map_fun.(child, type, type_map, remove_if_nil?, child_to_map_fun, key_field)
     end
   end
 
@@ -100,14 +97,14 @@ defmodule Noap.XMLSchema.MapUtil do
     end
   end
 
-  defp child_to_map(
-         xml_schema,
-         type,
-         type_map,
-         remove_if_nil?,
-         _child_to_map_fun,
-         _key_field
-       ) do
+  def child_to_map(
+        xml_schema,
+        type,
+        type_map,
+        remove_if_nil?,
+        _child_to_map_fun,
+        _key_field
+      ) do
     type.to_map(xml_schema, type_map, remove_if_nil?)
   end
 

@@ -13,7 +13,7 @@ defmodule Mix.Noap.GenCode.WSDLWrap do
   #   "1.2" => "http://schemas.xmlsoap.org/wsdl/soap12/"
   # }
 
-  import SweetXml, only: [xpath: 2, xpath: 3, sigil_x: 2, parse: 2]
+  import Noap.SweetXmlCompat, only: [xpath: 2, xpath: 3, sigil_x: 2, parse: 2]
 
   import __MODULE__.NamespaceUtil,
     only: [
