@@ -1,7 +1,6 @@
 defmodule Noap.Client do
   require Logger
-  import SweetXml, only: [xpath: 2, sigil_x: 2]
-  import Noap.XMLUtil, only: [add_soap_namespace: 2]
+  import Meeseeks.XPath
 
   @spec call_operation(Noap.WSDL.Operation.t(), Noap.XMLSchema.t(), Keyword.t()) ::
           Noap.call_operation_t()
@@ -21,11 +20,12 @@ defmodule Noap.Client do
     Logger.error("Error processing SOAP call status_code: #{status_code}, response: #{inspect(soap_response)}")
 
     error =
-      SweetXml.parse(soap_response, namespace_conformant: true)
-      |> xpath(
-        ~x"soap:Body/soap:Fault/faultstring/text()"s
-        |> add_soap_namespace("soap")
-      )
+      Meeseeks.parse(soap_response, :xml)
+      |> Meeseeks.one(xpath("//*[namespace-uri()='http://schemas.xmlsoap.org/soap/envelope/']/*[local-name()='Body']/*[local-name()='Fault']/*[local-name()='faultstring']"))
+      |> case do
+        nil -> nil
+        element -> Meeseeks.text(element)
+      end
 
     error =
       if is_nil(error) || error == "" do

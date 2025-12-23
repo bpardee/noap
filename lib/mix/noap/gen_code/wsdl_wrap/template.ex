@@ -63,9 +63,21 @@ defmodule Mix.Noap.GenCode.WSDLWrap.Template do
 
   defp xml_fields(complex_type) do
     complex_type.fields
+    |> Stream.map(&normalize_field/1)
     |> Stream.map(&Field.line/1)
     |> Enum.join("\n")
   end
+
+  defp normalize_field(field = %Field{type: type, field_or_embed: field_or_embed}) when is_atom(type) do
+    # Simple types (atoms) should always use :field, not :embeds_one or :embeds_many
+    if field_or_embed != :field do
+      %{field | field_or_embed: :field}
+    else
+      field
+    end
+  end
+
+  defp normalize_field(field), do: field
 
   defp only_simple_fields?(%ComplexType{fields: fields}) do
     fields

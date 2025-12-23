@@ -1,0 +1,136 @@
+reqns:
+  ProcessingRequest:
+    RequestId:
+    RequestType:
+    CategoryCode:
+    ItemData:
+      ItemIdentifier:
+      ItemName:
+        PrimaryName:
+        SecondaryName:
+        MiddleIdentifier:
+      ItemLocation:
+        StreetAddress:
+        City:
+        RegionCode:
+        PostalCode:
+      ItemAttributes:
+        AttributeCode:
+        AttributeValue:
+        SubAttributes:
+          SubCode:
+          SubValue:
+      PreviousLocation:
+        StreetAddress:
+        City:
+        RegionCode:
+        PostalCode:
+      ContactInfo:
+        PrimaryContact:
+        SecondaryContact:
+      NumericValue:
+      DateValue:
+        :type: :fis_date
+      CategoryCode:
+      MonthsAtLocation:
+        :type: :integer
+      YearsAtLocation:
+        :type: :integer
+    Metadata:
+      Version:
+      SystemIdentifier:
+      RequestIndicator:
+      SummaryIndicator:
+    ProcessingOptions:
+      OptionCode:
+      IncludeDetails:
+      IncludeHistory:
+resns:
+  ProcessingResponse:
+    ResponseId:
+    RequestId:
+    ProcessingResult:
+      ResultCode:
+      ResultMessage:
+      ScoreValue:
+        :type: :integer
+      ScoreReasons:
+        ReasonCode1:
+        ReasonCode2:
+        ReasonCode3:
+        ReasonText1:
+        ReasonText2:
+        ReasonText3:
+    ResultDetails:
+      DetailRecords:
+        DetailRecord:
+          RecordId:
+          RecordDate:
+            :type: :fis_date
+          RecordAmount:
+          RecordStatus:
+          RecordDescription:
+      CategorySummary:
+        CategoryCode:
+        TotalCount:
+          :type: :integer
+        TotalAmount:
+        AverageAmount:
+      HistorySummary:
+        DaysSinceFirstRecord:
+          :type: :integer
+        DaysSinceLastRecord:
+          :type: :integer
+        RecordsInPast30Days:
+          :type: :integer
+        RecordsInPast90Days:
+          :type: :integer
+        RecordsInPast180Days:
+          :type: :integer
+        RecordsInPast1Year:
+          :type: :integer
+        RecordsInPast2Years:
+          :type: :integer
+        RecordsInPast3Years:
+          :type: :integer
+        NoHistoryFlag:
+    SummaryData:
+      TotalRecords:
+        :type: :integer
+      TotalAmount:
+      AverageAmount:
+      MaximumAmount:
+      MinimumAmount:
+      RecordCounts:
+        Count30Days:
+          :type: :integer
+        Count60Days:
+          :type: :integer
+        Count90Days:
+          :type: :integer
+        Count180Days:
+          :type: :integer
+        Count1Year:
+          :type: :integer
+        Count2Years:
+          :type: :integer
+        Count3Years:
+          :type: :integer
+    ItemRecords:
+      ItemRecord:
+        ItemId:
+        ItemName:
+        ItemLocation:
+        ItemPostalCode:
+        RecordDate:
+          :type: :fis_date
+        RecordAmount:
+        RecordStatus:
+    ErrorDetails:
+      ErrorDetail:
+        ErrorCode:
+        ErrorMessage:
+    TrackingInfo:
+      TrackingId:
+      ReferenceNumber:
+

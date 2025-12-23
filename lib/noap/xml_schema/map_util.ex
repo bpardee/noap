@@ -4,7 +4,7 @@ defmodule Noap.XMLSchema.MapUtil do
   @spec to_map(Noap.XMLSchema.t(), boolean) :: map()
   def to_map(xml_schema, remove_if_nil? \\ true) do
     type_map = get_typemap(xml_schema)
-    __to_map__(xml_schema, type_map, remove_if_nil?)
+    __to_map__(xml_schema, type_map, remove_if_nil?, &child_to_map/6, :xml_name)
   end
 
   @spec to_passthru_map(Noap.XMLSchema.t(), boolean()) :: map()
@@ -21,7 +21,7 @@ defmodule Noap.XMLSchema.MapUtil do
         child_to_map_fun \\ &child_to_map/6,
         key_field \\ :name
       ) do
-    xml_schema.__struct__.xml_fields
+    xml_schema.__struct__.xml_fields()
     |> Enum.reduce(
       %{},
       fn xml_field, map ->
@@ -38,7 +38,7 @@ defmodule Noap.XMLSchema.MapUtil do
         if is_nil(value) && remove_if_nil? do
           map
         else
-          key = Map.get(xml_field, key_field)
+          key = Map.get(xml_field, key_field) || Map.get(xml_field, :xml_name) || Map.get(xml_field, :name)
           Map.put(map, key, value)
         end
       end
@@ -53,6 +53,8 @@ defmodule Noap.XMLSchema.MapUtil do
          _child_to_map_fun,
          _key_field
        ) do
+    # For structs, access the field directly using Map.get
+    # Structs in Elixir are maps, so Map.get works
     Map.get(xml_schema, name)
   end
 
@@ -70,7 +72,8 @@ defmodule Noap.XMLSchema.MapUtil do
       child_map =
         child_to_map_fun.(child, type, type_map, remove_if_nil?, child_to_map_fun, key_field)
 
-      if remove_if_nil? && child_map == %{}, do: nil, else: child_map
+      # Always return the child_map, even if it's empty - let the caller decide whether to include it
+      child_map
     end
   end
 
@@ -100,7 +103,7 @@ defmodule Noap.XMLSchema.MapUtil do
     end
   end
 
-  defp child_to_map(
+  def child_to_map(
          xml_schema,
          type,
          type_map,
@@ -108,7 +111,14 @@ defmodule Noap.XMLSchema.MapUtil do
          _child_to_map_fun,
          _key_field
        ) do
-    type.to_map(xml_schema, type_map, remove_if_nil?)
+    # Check if type is a module that implements to_map/3 (i.e., a struct type)
+    # Simple type modules (like Noap.Type.String) don't have to_map/3
+    if function_exported?(type, :to_map, 3) do
+      type.to_map(xml_schema, type_map, remove_if_nil?)
+    else
+      # For simple types or other non-struct types, just return the value as-is
+      xml_schema
+    end
   end
 
   defp child_to_passthru_map(
@@ -124,6 +134,11 @@ defmodule Noap.XMLSchema.MapUtil do
 
   defp get_type(%XMLField{xml_name: nil, type: embed_type_atom}, type_map) do
     type_map[embed_type_atom]
+  end
+
+  defp get_type(%XMLField{type: xml_schema_type}, type_map) when is_atom(xml_schema_type) do
+    # For simple types (atoms like :string, :integer), look up the module in type_map
+    type_map[xml_schema_type] || xml_schema_type
   end
 
   defp get_type(%XMLField{type: xml_schema_type}, _type_map), do: xml_schema_type

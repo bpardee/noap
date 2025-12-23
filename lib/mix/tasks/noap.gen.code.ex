@@ -33,9 +33,19 @@ defmodule Mix.Tasks.Noap.Gen.Code do
     case OptionParser.parse!(args, strict: @switches, aliases: @aliases) do
       # Refer to Mix.Noap.GenCode.WSDLWrap.Options for the various configuration options
       {mix_opts, []} ->
-        with app_opts when is_list(app_opts) <- Application.get_env(:noap, :gen_code),
-             opts when is_map(opts) <- Keyword.get(app_opts, Mix.Project.config()[:app]) do
-          do_run(mix_opts, opts)
+        case Application.get_env(:noap, :gen_code) do
+          app_opts when is_list(app_opts) ->
+            current_app = Mix.Project.config()[:app]
+            case Keyword.get(app_opts, current_app) do
+              opts when is_map(opts) ->
+                do_run(mix_opts, opts)
+              _ ->
+                Mix.shell().error("No configuration found for app :#{current_app} in :noap :gen_code config")
+                Mix.shell().info("wsdl_path and soap_module must be specified")
+            end
+          _ ->
+            Mix.shell().error("No :gen_code configuration found for :noap")
+            Mix.shell().info("Add config :noap, :gen_code, app_name: %{wsdl: \"...\", soap_module: ...} to your config file")
         end
 
       {_mix_opts, _args} ->

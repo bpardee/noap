@@ -75,7 +75,7 @@ defmodule Noap.XMLSchema do
         def xml_fields(), do: @xml_fields
 
         def to_map(xml_schema = %__MODULE__{}, type_map, remove_if_nil? \\ true) do
-          Noap.XMLSchema.MapUtil.__to_map__(xml_schema, type_map, remove_if_nil?)
+          Noap.XMLSchema.MapUtil.__to_map__(xml_schema, type_map, remove_if_nil?, &Noap.XMLSchema.MapUtil.child_to_map/6, :xml_name)
         end
       end
 

@@ -26,12 +26,13 @@ defmodule Noap.MixProject do
     [
       {:bypass, "~> 2.1", optional: true},
       {:mojito, "~> 0.7", optional: true},
-      {:finch, "~> 0.13", optional: true},
-      {:credo, "~> 1.0", only: [:dev, :test]},
-      {:ex_doc, "~>  0.19.3", only: [:dev, :docs], runtime: false},
-      {:sweet_xml, "~> 0.6.6"},
-      {:xml_builder, "~> 2.1"},
-      {:yaml_elixir, "~> 2.5", optional: true}
+      {:finch, "~> 0.20", optional: true},
+      {:credo, "~> 1.7", only: [:dev, :test]},
+      {:ex_doc, "~> 0.39", only: [:dev, :docs], runtime: false},
+      {:meeseeks, "~> 0.18"},
+      {:xml_builder, "~> 2.4"},
+      {:yaml_elixir, "2.11.0", optional: true},
+      {:telemetry, "~> 1.0", override: true}
     ]
   end
 end

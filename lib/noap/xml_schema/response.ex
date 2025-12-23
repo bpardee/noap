@@ -4,25 +4,28 @@ defmodule Noap.XMLSchema.Response do
   """
 
   require Logger
-  import SweetXml, only: [xpath: 2, sigil_x: 2, add_namespace: 3]
-  import Noap.XMLUtil, only: [add_soap_namespace: 2]
+  import Meeseeks.XPath
   alias Noap.XMLField
 
+  @soap_namespace "http://schemas.xmlsoap.org/soap/envelope/"
+
   def parse_soap_response(body, operation) do
-    doc = SweetXml.parse(body, namespace_conformant: true)
+    doc = Meeseeks.parse(body, :xml)
 
     body_node =
-      xpath(
+      Meeseeks.one(
         doc,
-        ~x"soap:Body"e |> add_soap_namespace("soap")
+        xpath("//*[namespace-uri()='#{@soap_namespace}' and local-name()='Body']")
       )
 
-    body_node
-    |> xpath(
-      ~x"body:#{operation.output_name}"e
-      |> add_namespace("body", operation.output_schema.target_namespace)
-    )
-    |> parse_xml_schema(
+    output_node =
+      Meeseeks.one(
+        body_node,
+        xpath(".//*[namespace-uri()='#{operation.output_schema.target_namespace}' and local-name()='#{operation.output_name}']")
+      )
+
+    parse_xml_schema(
+      output_node,
       operation.output_schema.target_namespace,
       operation.output_module,
       operation.type_map
@@ -60,7 +63,7 @@ defmodule Noap.XMLSchema.Response do
                   get_field_value(node, body_namespace, xml_name, type, xml_field.opts, type_map)
 
                 [many_xml_name] ->
-                  body_xpath(node, body_namespace, ~x"body:#{many_xml_name}"l)
+                  body_xpath_all(node, body_namespace, many_xml_name)
                   |> Enum.map(
                     &get_field_value(
                       &1,
@@ -84,7 +87,7 @@ defmodule Noap.XMLSchema.Response do
           parent_xml_node when is_binary(parent_xml_node) ->
             Logger.debug("Parsing node(string)=#{parent_xml_node}")
             sub_xml_map = v
-            child_node = body_xpath(node, body_namespace, ~x"body:#{parent_xml_node}"e)
+            child_node = body_xpath_one(node, body_namespace, parent_xml_node)
 
             parse_xml_map(
               value_map,
@@ -132,7 +135,7 @@ defmodule Noap.XMLSchema.Response do
          xml_field = %XMLField{field_or_embeds: :embeds_one},
          type_map
        ) do
-    body_xpath(node, body_namespace, ~x"body:#{xml_field.xml_name}"e)
+    body_xpath_one(node, body_namespace, xml_field.xml_name)
     |> parse_xml_schema(body_namespace, xml_field.type, type_map)
   end
 
@@ -142,15 +145,25 @@ defmodule Noap.XMLSchema.Response do
          xml_field = %XMLField{field_or_embeds: :embeds_many},
          type_map
        ) do
-    body_xpath(node, body_namespace, ~x"body:#{xml_field.xml_name}"l)
+    body_xpath_all(node, body_namespace, xml_field.xml_name)
     |> Enum.map(&parse_xml_schema(&1, body_namespace, xml_field.type, type_map))
   end
 
   defp get_field_value(node, body_namespace, xml_name, type, opts, type_map) do
     Logger.debug("get_field_value of node #{inspect(node)}")
 
-    body_xpath(node, body_namespace, ~x"body:#{xml_name}/text()"s)
-    |> String.trim()
+    text_value =
+      body_xpath_one(node, body_namespace, xml_name)
+      |> case do
+        nil -> nil
+        element -> Meeseeks.text(element)
+      end
+
+    text_value
+    |> case do
+      nil -> nil
+      text -> String.trim(text)
+    end
     |> Noap.Util.nil_if_empty()
     |> from_str(type, opts, type_map)
   end
@@ -167,18 +180,27 @@ defmodule Noap.XMLSchema.Response do
   defp verify_ok({:ok, val}, _input_val, _type), do: val
 
   defp verify_ok(:error, input_val, type) do
-    Logger.warn("Unable to parse type=#{type} val=#{input_val}")
+    Logger.warning("Unable to parse type=#{type} val=#{input_val}")
     nil
   end
 
   defp verify_ok({:error, message_or_atom}, input_val, type) do
-    Logger.warn("Unable to parse type=#{type} val=#{input_val}: #{message_or_atom}")
+    Logger.warning("Unable to parse type=#{type} val=#{input_val}: #{message_or_atom}")
     nil
   end
 
-  defp body_xpath(node, body_namespace, body_sigil) do
-    node
-    |> xpath(body_sigil |> add_namespace("body", body_namespace))
+  defp body_xpath_one(node, body_namespace, xml_name) do
+    Meeseeks.one(
+      node,
+      xpath(".//*[namespace-uri()='#{body_namespace}' and local-name()='#{xml_name}']")
+    )
+  end
+
+  defp body_xpath_all(node, body_namespace, xml_name) do
+    Meeseeks.all(
+      node,
+      xpath(".//*[namespace-uri()='#{body_namespace}' and local-name()='#{xml_name}']")
+    )
   end
 
   # def soap_version, do: Application.fetch_env!(:soap, :globals)[:version]
