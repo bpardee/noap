@@ -204,7 +204,7 @@ defmodule Mix.Noap.GenCode.WSDLWrap.CreateCode do
 
   defp convert_field_type(field, type) when is_binary(type) do
     if String.starts_with?(type, ":") do
-      type = type |> String.slice(1..-1) |> String.to_atom()
+      type = type |> String.slice(1..-1//1) |> String.to_atom()
       %{field | type: type}
     else
       raise "Not sure what to do with type=#{type}"

@@ -11,9 +11,9 @@ Soap client for Elixir
 ```elixir
 def deps do
   [
-    {:noap, "~> 0.1.0"},
+    {:noap, "~> 0.2.0"},
     # finch is optional, otherwise create a module similar to Noap.HTTP.Finch
-    {:finch, "~> 0.13"}
+    {:finch, "~> 0.21"}
   ]
 end
 ```

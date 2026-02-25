@@ -33,7 +33,7 @@ defmodule Mix.Noap.GenCode.WSDLWrap.Options do
     map[to_string(ns)] || map[nil]
   end
 
-  def schema_module(%{}, ns), do: nil
+  def schema_module(%{}, _ns), do: nil
 
   def overrides(options) do
     case options[:overrides] do
