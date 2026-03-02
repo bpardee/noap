@@ -5,7 +5,7 @@ defmodule CountryInfoService.MixProject do
     [
       app: :country_info_service,
       version: "0.1.0",
-      elixir: "~> 1.11",
+      elixir: "~> 1.19",
       start_permanent: Mix.env() == :prod,
       deps_path: "../../deps",
       deps: deps()
@@ -22,7 +22,7 @@ defmodule CountryInfoService.MixProject do
   defp deps do
     [
       {:noap, path: "../.."},
-      {:finch, "~> 0.13"}
+      {:finch, "~> 0.21"}
     ]
   end
 end

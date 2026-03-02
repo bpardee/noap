@@ -44,6 +44,9 @@ defmodule Mix.Tasks.Noap.Gen.Code do
   end
 
   defp do_run(mix_opts, opts = %{wsdl: wsdl_path, soap_module: soap_module}) do
+    Application.ensure_all_started(:xmerl)
+    :code.ensure_loaded(:xmerl_scan)
+
     type_map =
       Mix.Project.config()[:app]
       |> Noap.Type.type_map()

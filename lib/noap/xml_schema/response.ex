@@ -4,12 +4,12 @@ defmodule Noap.XMLSchema.Response do
   """
 
   require Logger
-  import SweetXml, only: [xpath: 2, sigil_x: 2, add_namespace: 3]
+  import Noap.XML, only: [xpath: 2, sigil_x: 2, add_namespace: 3]
   import Noap.XMLUtil, only: [add_soap_namespace: 2]
   alias Noap.XMLField
 
   def parse_soap_response(body, operation) do
-    doc = SweetXml.parse(body, namespace_conformant: true)
+    doc = Noap.XML.parse(body, namespace_conformant: true)
 
     body_node =
       xpath(
@@ -33,9 +33,9 @@ defmodule Noap.XMLSchema.Response do
   defp parse_xml_schema(node, body_namespace, module, type_map) do
     Logger.debug("Parsing xml_schema=#{module}")
 
-    module.xml_fields
+    apply(module, :xml_fields, [])
     |> Enum.reduce(
-      module.__struct__,
+      struct(module),
       fn xml_field, model ->
         Logger.debug("Parsing xml_field=#{inspect(xml_field)}")
         value = parse_field(node, body_namespace, xml_field, type_map)
@@ -167,12 +167,12 @@ defmodule Noap.XMLSchema.Response do
   defp verify_ok({:ok, val}, _input_val, _type), do: val
 
   defp verify_ok(:error, input_val, type) do
-    Logger.warn("Unable to parse type=#{type} val=#{input_val}")
+    Logger.warning("Unable to parse type=#{type} val=#{input_val}")
     nil
   end
 
   defp verify_ok({:error, message_or_atom}, input_val, type) do
-    Logger.warn("Unable to parse type=#{type} val=#{input_val}: #{message_or_atom}")
+    Logger.warning("Unable to parse type=#{type} val=#{input_val}: #{message_or_atom}")
     nil
   end
 
