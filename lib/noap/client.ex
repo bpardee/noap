@@ -44,6 +44,15 @@ defmodule Noap.Client do
     {:ok, status_code, response_xml_schema}
   end
 
+  defp parse({:error, %Mint.TransportError{reason: :timeout} = error}, _operation) do
+    handle_timeout_error(error)
+  end
+
+  def handle_timeout_error(error) do
+    Logger.warning("SOAP call timeout: #{inspect(error)}")
+    {:error, 500, :timeout}
+  end
+
   defp parse({:error, error}, _operation) do
     Logger.error("SOAP call error: #{inspect(error)}")
     {:error, 500, error}
